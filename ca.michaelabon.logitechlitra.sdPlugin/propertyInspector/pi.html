@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8"/>
+    <meta name=viewport
+          content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,minimal-ui,viewport-fit=cover">
+    <meta name=apple-mobile-web-app-capable content=yes>
+    <meta name=apple-mobile-web-app-status-bar-style content=black>
+    <link rel="stylesheet" href="./pi.css"/>
+    <style>
+        input[type="range"] {
+            color: deeppink;
+            accent-color: deeppink;
+        }
+    </style>
+
+
+    <title>ca.michaelabon.logitechlitra Property Inspector</title>
+</head>
+
+<body>
+<div class="sdpi-wrapper">
+    <form id="property-inspector">
+        <div type="range" class="sdpi-item" id="temperature">
+            <div class="sdpi-item-label">Temperature</div>
+            <div class="sdpi-item-value">
+                <span class="clickable" value="2700">2700</span>
+                <input data-suffix="K" type="range" min="2700" max="6500" step="100" name="temperature" value="3200">
+                <span class="clickable" value="6500">6500</span>
+            </div>
+        </div>
+        <div type="range" class="sdpi-item" id="brightness">
+            <div class="sdpi-item-label">Brightness</div>
+            <div class="sdpi-item-value">
+                <span class="clickable" value="1">1</span>
+                <input data-suffix="%" type="range" min="1" max="100" name="brightness" value="50">
+                <span class="clickable" value="100">100</span>
+            </div>
+        </div>
+    </form>
+</div>
+</body>
+
+<script src="./libs/js/constants.js"></script>
+<script src="./libs/js/events.js"></script>
+<script src="./libs/js/api.js"></script>
+<script src="./libs/js/utils.js"></script>
+<script src="./libs/js/property-inspector.js"></script>
+<script src="pi.js"></script>
+
+<script>
+    const clamp = (num, min, max) => num < min ? min : num > max ? max : num;
+
+    const getRGBFromTemperature = (tmpKelvin) => {
+        // All calculations require tmpKelvin \ 100, so only do the conversion once
+        tmpKelvin = clamp(tmpKelvin, 1000, 40000) / 100;
+
+        // Note: The R-squared values for each approximation follow each calculation
+        return {
+            r: tmpKelvin <= 66 ? 255 :
+                clamp(329.698727446 * (Math.pow(tmpKelvin - 60, -0.1332047592)), 0, 255),  // .988
+
+            g: tmpKelvin <= 66 ?
+                clamp(99.4708025861 * Math.log(tmpKelvin) - 161.1195681661, 0, 255) :      // .996
+                clamp(288.1221695283 * (Math.pow(tmpKelvin - 60, -0.0755148492)), 0, 255), // .987
+
+            b: tmpKelvin >= 66 ? 255 :
+                tmpKelvin <= 19 ? 0 :
+                    clamp(138.5177312231 * Math.log(tmpKelvin - 10) - 305.0447927307, 0, 255)  // .998
+        };
+    };
+
+
+    const handleTemperatureChange = (event) => {
+        const kelvin = event.currentTarget.value
+
+        console.log("KELVIN", kelvin)
+
+        const {r, g, b} = getRGBFromTemperature(kelvin)
+
+        console.log("rgb", r, g, b)
+
+        console.log("event.currentTarget", event.currentTarget)
+
+        event.currentTarget.style.accentColor = `rgb(${r}, ${g}, ${b})`
+    }
+
+    const handleBrightnessChange = (event) => {
+        // const v = parseInt(event.currentTarget.value) * 255 / 100
+
+        let v = parseInt(event.currentTarget.value) * 0.8 + 20
+        v = clamp(v, 20, 100)
+
+
+        event.currentTarget.style.accentColor = `hsl(0, 0%, ${v}%)`
+    }
+
+    let temperatureInput = document.querySelector('#temperature input');
+    temperatureInput.addEventListener("change", handleTemperatureChange)
+    temperatureInput.addEventListener("input", handleTemperatureChange)
+    let brightnessInput = document.querySelector('#brightness input');
+    brightnessInput.addEventListener("change", handleBrightnessChange);
+    brightnessInput.addEventListener("input", handleBrightnessChange);
+
+    (() => {
+        let temperatureInput = document.querySelector('#temperature input');
+        let brightnessInput = document.querySelector('#brightness input');
+
+        handleTemperatureChange({currentTarget: temperatureInput})
+        handleBrightnessChange({currentTarget: brightnessInput})
+    })()
+</script>
+
+</html>
