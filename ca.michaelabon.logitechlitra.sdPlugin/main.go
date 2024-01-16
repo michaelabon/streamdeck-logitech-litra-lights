@@ -18,17 +18,22 @@ import (
 import "golang.org/x/exp/constraints"
 
 type Settings struct {
-	Counter     int    `json:"counter"`
 	Temperature uint16 `json:"temperature,string"`
 	Brightness  uint8  `json:"brightness,string"`
 }
 
 func main() {
-	f, err := os.CreateTemp("logs", "streamdeck-counter.log")
+	fileName := "streamdeck-logitech-litra-lights.log"
+	f, err := os.CreateTemp("logs", fileName)
 	if err != nil {
 		log.Fatalf("error creating temp file: %v", err)
 	}
-	defer f.Close()
+	defer func(f *os.File) {
+		err := f.Close()
+		if err != nil {
+			log.Printf("unable to close file “%s”: %v\n", fileName, err)
+		}
+	}(f)
 
 	log.SetOutput(f)
 
@@ -51,10 +56,24 @@ func run(ctx context.Context) error {
 }
 
 func setup(client *streamdeck.Client) {
-	action := client.Action("dev.samwho.streamdeck.counter")
 	settings := make(map[string]*Settings)
 
-	action.RegisterHandler(streamdeck.WillAppear, func(ctx context.Context, client *streamdeck.Client, event streamdeck.Event) error {
+	setupSetLightsAction(client, settings)
+	setupTurnOffLightsAction(client)
+}
+
+func setupTurnOffLightsAction(client *streamdeck.Client) {
+	turnOffLightsAction := client.Action("ca.michaelabon.logitech-litra-lights.off")
+
+	turnOffLightsAction.RegisterHandler(streamdeck.KeyDown, func(ctx context.Context, client *streamdeck.Client, event streamdeck.Event) error {
+		return handleTurnOffLights(ctx, client)
+	})
+}
+
+func setupSetLightsAction(client *streamdeck.Client, settings map[string]*Settings) {
+	setLightsAction := client.Action("ca.michaelabon.logitech-litra-lights.set")
+
+	setLightsAction.RegisterHandler(streamdeck.WillAppear, func(ctx context.Context, client *streamdeck.Client, event streamdeck.Event) error {
 		p := streamdeck.WillAppearPayload{}
 		if err := json.Unmarshal(event.Payload, &p); err != nil {
 			return err
@@ -85,7 +104,7 @@ func setup(client *streamdeck.Client) {
 		return err
 	})
 
-	action.RegisterHandler(streamdeck.DidReceiveSettings, func(ctx context.Context, client *streamdeck.Client, event streamdeck.Event) error {
+	setLightsAction.RegisterHandler(streamdeck.DidReceiveSettings, func(ctx context.Context, client *streamdeck.Client, event streamdeck.Event) error {
 		p := streamdeck.DidReceiveSettingsPayload{}
 		if err := json.Unmarshal(event.Payload, &p); err != nil {
 			return err
@@ -116,45 +135,57 @@ func setup(client *streamdeck.Client) {
 		return err
 	})
 
-	action.RegisterHandler(streamdeck.WillDisappear, func(ctx context.Context, client *streamdeck.Client, event streamdeck.Event) error {
+	setLightsAction.RegisterHandler(streamdeck.WillDisappear, func(ctx context.Context, client *streamdeck.Client, event streamdeck.Event) error {
 		s, _ := settings[event.Context]
-		s.Counter = 0
 		return client.SetSettings(ctx, s)
 	})
 
-	action.RegisterHandler(streamdeck.KeyDown, func(ctx context.Context, client *streamdeck.Client, event streamdeck.Event) error {
-		s, ok := settings[event.Context]
-		if !ok {
-			return fmt.Errorf("couldn't find settings for context %v", event.Context)
-		}
-
-		log.Printf("KeyDown with payload %+v\n", event.Payload)
-
-		s.Counter++
-		if err := client.SetSettings(ctx, s); err != nil {
-			return err
-		}
-
-		background, err := streamdeck.Image(generateBackground(*s))
-		if err != nil {
-			log.Println("Error while generating streamdeck image", err)
-			return err
-		}
-
-		err = invokeLights(*s)
-		if err != nil {
-			log.Println("Error: ", err)
-			return client.SetTitle(ctx, "Err", streamdeck.HardwareAndSoftware)
-		}
-
-		err = client.SetImage(ctx, background, streamdeck.HardwareAndSoftware)
-		if err != nil {
-			log.Println("Error while setting the light background", err)
-			return err
-		}
-
-		return client.SetTitle(ctx, strconv.Itoa(int(s.Temperature)), streamdeck.HardwareAndSoftware)
+	setLightsAction.RegisterHandler(streamdeck.KeyDown, func(ctx context.Context, client *streamdeck.Client, event streamdeck.Event) error {
+		return handleSetLights(ctx, client, event, settings)
 	})
+}
+
+func handleTurnOffLights(ctx context.Context, client *streamdeck.Client) error {
+	err := invokeLights(turnOffLights())
+	if err != nil {
+		log.Println("Error: ", err)
+		return client.SetTitle(ctx, "Err", streamdeck.HardwareAndSoftware)
+	}
+
+	return nil
+}
+
+func handleSetLights(ctx context.Context, client *streamdeck.Client, event streamdeck.Event, settings map[string]*Settings) error {
+	s, ok := settings[event.Context]
+	if !ok {
+		return fmt.Errorf("couldn't find settings for context %v", event.Context)
+	}
+
+	log.Printf("KeyDown with payload %+v\n", event.Payload)
+
+	if err := client.SetSettings(ctx, s); err != nil {
+		return err
+	}
+
+	background, err := streamdeck.Image(generateBackground(*s))
+	if err != nil {
+		log.Println("Error while generating streamdeck image", err)
+		return err
+	}
+
+	err = invokeLights(setLightsBrightnessAndTemperature(*s))
+	if err != nil {
+		log.Println("Error: ", err)
+		return client.SetTitle(ctx, "Err", streamdeck.HardwareAndSoftware)
+	}
+
+	err = client.SetImage(ctx, background, streamdeck.HardwareAndSoftware)
+	if err != nil {
+		log.Println("Error while setting the light background", err)
+		return err
+	}
+
+	return client.SetTitle(ctx, strconv.Itoa(int(s.Temperature)), streamdeck.HardwareAndSoftware)
 }
 
 const VID = 0x046d
@@ -195,23 +226,43 @@ func setTemperature(temperature uint16) (b []byte) {
 	return
 }
 
-func invokeLights(settings Settings) error {
+func invokeLights(theFunc hid.EnumFunc) error {
 	var err error
 
 	if err = hid.Init(); err != nil {
 		log.Println("Unable to hid.Init()", err)
 		log.Println(err)
 	}
+	defer func() {
+		err := hid.Exit()
+		if err != nil {
+			log.Println("unable to hid.Exit()", err)
+		}
+	}()
 
-	err = hid.Enumerate(VID, PID, func(info *hid.DeviceInfo) error {
+	err = hid.Enumerate(VID, PID, theFunc)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func setLightsBrightnessAndTemperature(settings Settings) hid.EnumFunc {
+	return func(deviceInfo *hid.DeviceInfo) error {
 		var err error
 
-		d, err := hid.Open(VID, PID, info.SerialNbr)
+		d, err := hid.Open(VID, PID, deviceInfo.SerialNbr)
 		if err != nil {
 			log.Println("Unable to open", err)
 			return err
 		}
-		defer d.Close()
+		defer func(d *hid.Device) {
+			err := d.Close()
+			if err != nil {
+				log.Println("unable to hid.Device.Close()", err)
+			}
+		}(d)
 
 		bb := lightsOn()
 		if _, err := d.Write(bb); err != nil {
@@ -230,28 +281,33 @@ func invokeLights(settings Settings) error {
 		}
 
 		return nil
-	})
-
-	if err != nil {
-		return err
 	}
-
-	// Finalize the hid package.
-	if err := hid.Exit(); err != nil {
-		return err
-	}
-
-	return nil
 }
 
-func blackBackground() image.Image {
-	img := image.NewRGBA(image.Rect(0, 0, 72, 72))
-	for x := 0; x < 72; x++ {
-		for y := 0; y < 72; y++ {
-			img.Set(x, y, color.Black)
+func turnOffLights() hid.EnumFunc {
+	return func(deviceInfo *hid.DeviceInfo) error {
+		var err error
+
+		d, err := hid.Open(VID, PID, deviceInfo.SerialNbr)
+		if err != nil {
+			log.Println("unable to open", err)
+			return err
 		}
+		defer func(d *hid.Device) {
+			err := d.Close()
+			if err != nil {
+				log.Println("unable to hid.Device.Close()", err)
+			}
+		}(d)
+
+		bb := lightsOff()
+		if _, err := d.Write(bb); err != nil {
+			log.Println("unable to write bytes with lights off", err)
+			return err
+		}
+
+		return nil
 	}
-	return img
 }
 
 func clamp[K constraints.Ordered](n K, min, max K) K {
@@ -263,10 +319,6 @@ func clamp[K constraints.Ordered](n K, min, max K) K {
 		r = max
 	}
 	return r
-}
-
-func clampBrightness(n int8) int8 {
-	return clamp(n, 0, 100)
 }
 
 func generateBackground(settings Settings) image.Image {

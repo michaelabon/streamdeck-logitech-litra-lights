@@ -1,1 +1,15 @@
-{}
+{
+	"Description": "Control your Logitech Litra lights",
+	"Name": "Logitech Litra",
+	"ca.michaelabon.logitech-litra-lights.set.action": {
+		"Name": "Set Brightness & Temperature",
+		"Tooltip": "Set your lights’ brightness and temperature"
+	},
+	"ca.michaelabon.logitech-litra-lights.off.action": {
+		"Name": "Turn Off Litra Lights",
+		"Tooltip": "Turn off your lights"
+	},
+	"Localization": {
+
+	}
+}

@@ -3,10 +3,10 @@
   "Actions": [
     {
       "Icon": "icons/setLightsAction",
-      "Name": "Set Litra Lights",
+      "Name": "Set Brightness & Temperature",
       "States": [
         {
-          "Image": "icons/counterState",
+          "Image": "icons/setLightsAction",
           "TitleAlignment": "middle",
           "FontSize": "24"
         }
@@ -14,11 +14,29 @@
       "SupportedInMultiActions": true,
       "Tooltip": "Set your lights",
       "UUID": "ca.michaelabon.logitech-litra-lights.set"
+    },
+    {
+      "Icon": "icons/turnOffLightsAction",
+      "Name": "Turn Off Litra Lights",
+      "States": [
+        {
+          "Image": "icons/turnOffLightsAction",
+          "TitleAlignment": "middle",
+          "Title": "Off",
+          "FontSize": "24"
+        }
+      ],
+      "SupportedInMultiActions": true,
+      "Tooltip": "Turn off your lights",
+      "UUID": "ca.michaelabon.logitech-litra-lights.off"
     }
   ],
   "Author": "Michael Abon",
-  "CodePath": "streamdeck-logitech-litra.exe",
+  "Category": "Logitech Litra",
+  "CategoryIcon": "icons/categoryIcon",
+  "CodePathWindows": "streamdeck-logitech-litra.exe",
   "CodePathMac": "streamdeck-logitech-litra",
+  "CodePath": "streamdeck-logitech-litra",
   "Description": "Control your Logitech Litra lights",
   "Icon": "icons/pluginIcon",
   "Name": "Logitech Litra",
@@ -38,5 +56,5 @@
     "MinimumVersion": "5.0"
   },
   "URL": "https://github.com/michaelabon/streamdeck-logitech-litra-lights",
-  "Version": "0.3"
+  "Version": "1.0.0-rc.1"
 }
