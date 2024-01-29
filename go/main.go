@@ -84,6 +84,11 @@ func setupSetLightsAction(client *streamdeck.Client, settings map[string]*Settin
 			return err
 		}
 
+		if s.Temperature == 0 {
+			s.Temperature = 3200
+			s.Brightness = 50
+		}
+
 		background, err := streamdeck.Image(generateBackground(*s))
 		if err != nil {
 			log.Println("Error while generating streamdeck image", err)
