@@ -4,18 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	logitech "github.com/michaelabon/streamdeck-logitech-litra/internal/logitech_hid"
+	"github.com/samwho/streamdeck"
 	"github.com/sstallion/go-hid"
-	"image"
-	"image/color"
 	"log"
 	"os"
 	"strconv"
-
-	tt "github.com/maruel/temperature"
-	"github.com/samwho/streamdeck"
 )
-
-import "golang.org/x/exp/constraints"
 
 type Settings struct {
 	Temperature uint16 `json:"temperature,string"`
@@ -146,7 +141,7 @@ func setupSetLightsAction(client *streamdeck.Client, settings map[string]*Settin
 }
 
 func handleTurnOffLights(ctx context.Context, client *streamdeck.Client) error {
-	err := invokeLights(turnOffLights())
+	err := writeToLights(sendTurnOffLights())
 	if err != nil {
 		log.Println("Error: ", err)
 		return client.SetTitle(ctx, "Err", streamdeck.HardwareAndSoftware)
@@ -173,7 +168,7 @@ func handleSetLights(ctx context.Context, client *streamdeck.Client, event strea
 		return err
 	}
 
-	err = invokeLights(setLightsBrightnessAndTemperature(*s))
+	err = writeToLights(sendBrightnessAndTemperature(*s))
 	if err != nil {
 		log.Println("Error: ", err)
 		return client.SetTitle(ctx, "Err", streamdeck.HardwareAndSoftware)
@@ -191,42 +186,9 @@ func handleSetLights(ctx context.Context, client *streamdeck.Client, event strea
 const VID = 0x046d
 const PID = 0xc900
 
-func lightsOn() (b []byte) {
-	b = make([]byte, 20)
-	copy(b, []byte{0x11, 0xff, 0x04, 0x1c, 0x01})
-	return
-}
-
-func lightsOff() (b []byte) {
-	b = make([]byte, 20)
-	copy(b, []byte{0x11, 0xff, 0x04, 0x1c, 0x00})
-	return
-}
-
-func setBrightness(percentage uint8) (b []byte) {
-	b = make([]byte, 20)
-	copy(b, []byte{0x11, 0xff, 0x04, 0x4c, 0x00, calcBrightness(percentage)})
-	return
-}
-
-// Takes 1-100 and returns 20-250
-func calcBrightness(brightness uint8) byte {
-	return byte(int(float64(brightness-1.0)/(99.0)*(250-20)) + 20)
-}
-
-// Takes 2700-6500
-func setTemperature(temperature uint16) (b []byte) {
-	b = make([]byte, 20)
-	b[0] = 0x11
-	b[1] = 0xff
-	b[2] = 0x04
-	b[3] = 0x9c
-	b[4] = byte(temperature >> 8)
-	b[5] = byte(temperature)
-	return
-}
-
-func invokeLights(theFunc hid.EnumFunc) error {
+// writeToLights opens a connection to each light attached to the computer
+// and then invokes theFunc for each light.
+func writeToLights(theFunc hid.EnumFunc) error {
 	var err error
 
 	if err = hid.Init(); err != nil {
@@ -248,7 +210,7 @@ func invokeLights(theFunc hid.EnumFunc) error {
 	return nil
 }
 
-func setLightsBrightnessAndTemperature(settings Settings) hid.EnumFunc {
+func sendBrightnessAndTemperature(settings Settings) hid.EnumFunc {
 	return func(deviceInfo *hid.DeviceInfo) error {
 		var err error
 
@@ -264,18 +226,27 @@ func setLightsBrightnessAndTemperature(settings Settings) hid.EnumFunc {
 			}
 		}(d)
 
-		bb := lightsOn()
-		if _, err := d.Write(bb); err != nil {
-			log.Println("Unable to write bytes with lights on", err)
+		byteSequence := logitech.ConvertLightsOn()
+		if _, err := d.Write(byteSequence); err != nil {
+			log.Println(err)
 			return err
 		}
-		bb = setBrightness(settings.Brightness)
-		if _, err := d.Write(bb); err != nil {
+
+		byteSequence, err = logitech.ConvertBrightness(settings.Brightness)
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+		if _, err := d.Write(byteSequence); err != nil {
 			log.Println("Unable to write bytes with set brightness", err)
 			return err
 		}
-		bb = setTemperature(settings.Temperature)
-		if _, err := d.Write(bb); err != nil {
+		byteSequence, err = logitech.ConvertTemperature(settings.Temperature)
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+		if _, err := d.Write(byteSequence); err != nil {
 			log.Println("Unable to write bytes with set temperature", err)
 			return err
 		}
@@ -284,7 +255,7 @@ func setLightsBrightnessAndTemperature(settings Settings) hid.EnumFunc {
 	}
 }
 
-func turnOffLights() hid.EnumFunc {
+func sendTurnOffLights() hid.EnumFunc {
 	return func(deviceInfo *hid.DeviceInfo) error {
 		var err error
 
@@ -300,87 +271,12 @@ func turnOffLights() hid.EnumFunc {
 			}
 		}(d)
 
-		bb := lightsOff()
-		if _, err := d.Write(bb); err != nil {
+		byteSequence := logitech.ConvertLightsOff()
+		if _, err := d.Write(byteSequence); err != nil {
 			log.Println("unable to write bytes with lights off", err)
 			return err
 		}
 
 		return nil
 	}
-}
-
-func clamp[K constraints.Ordered](n K, min, max K) K {
-	r := n
-	if r < min {
-		r = min
-	}
-	if r > max {
-		r = max
-	}
-	return r
-}
-
-func generateBackground(settings Settings) image.Image {
-	const dim = 72 // TODO: Does this need to be 144?
-	img := image.NewRGBA64(image.Rect(0, 0, dim, dim))
-
-	temperature := settings.Temperature
-	brightness := settings.Brightness
-
-	// scale temperature so that blue looks bluer
-	temperature = uint16(float64(temperature-2700)*1.3 + 2700)
-
-	brightness = 100 - brightness
-	brightness = uint8(float64(brightness) / 1.2)
-
-	r, g, b := tt.ToRGB(temperature)
-
-	log.Printf("Initial rgb{%v, %v, %v}\n", r, g, b)
-
-	var r1, g1, b1 uint8
-
-	// scale for brightness
-	if r < brightness {
-		r1 = 0
-	} else {
-		r1 = r - brightness
-	}
-
-	if g < brightness {
-		g1 = 0
-	} else {
-		g1 = g - brightness
-	}
-
-	if b < brightness {
-		b1 = 0
-	} else {
-		b1 = b - brightness
-	}
-
-	log.Printf("Final rgb{%v, %v, %v}\n", r, g, b)
-
-	alwaysShowTheFullColorForTheFirstXPixels := 20
-	for x := 0; x < dim; x++ {
-		for y := 0; y < dim; y++ {
-			r2 := lerp(r, r1, alwaysShowTheFullColorForTheFirstXPixels, y, dim)
-			g2 := lerp(g, g1, alwaysShowTheFullColorForTheFirstXPixels, y, dim)
-			b2 := lerp(b, b1, alwaysShowTheFullColorForTheFirstXPixels, y, dim)
-
-			c := color.RGBA{R: r2, G: g2, B: b2, A: 0xff}
-			img.Set(x, y, c)
-		}
-	}
-
-	return img
-}
-
-// Returns the interpolated value the is calculated from topC to botC
-func lerp(topC, botC uint8, min, y, max int) uint8 {
-	y = clamp(y, min, max)
-	percentage := float64(y-min) / float64(max-min)
-	value := topC - uint8(float64(topC-botC)*percentage)
-
-	return value
 }
