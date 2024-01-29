@@ -2,13 +2,12 @@ package main
 
 import (
 	temperature2 "github.com/maruel/temperature"
-	"golang.org/x/exp/constraints"
 	"image"
 	"image/color"
 	"log"
 )
 
-func clamp[K constraints.Ordered](n K, min, max K) K {
+func clamp(n, min, max int) int {
 	r := n
 	if r < min {
 		r = min
