@@ -19,3 +19,7 @@ link:
 
 test:
     go test -C go ./...
+
+## Format markdown files using Semantic Line Breaks
+lint:
+    readable fmt README.md
