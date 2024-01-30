@@ -18,6 +18,11 @@ $PI.onConnected((jsn) => {
         })
     );
 
+    if (actionInfo && actionInfo.action) {
+        const section = document.getElementById(actionInfo.action)
+        section.style.display = "block"
+    }
+
     window.onGetSettingsClick = (url) => {
         $PI.send(this.UUID, "openUrl", {payload: {url}})
     }
