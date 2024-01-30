@@ -20,6 +20,6 @@ link:
 test:
     go test -C go ./...
 
-## Format markdown files using Semantic Line Breaks
+# From https://github.com/bobheadxi/readable
 lint:
     readable fmt README.md
