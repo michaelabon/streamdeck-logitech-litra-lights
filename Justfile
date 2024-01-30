@@ -1,6 +1,7 @@
 GO := "go"
 GOFLAGS := ""
 PLUGIN := "ca.michaelabon.logitechlitra.sdPlugin"
+DISTRIBUTION_TOOL := "$HOME/.bin/DistributionTool"
 
 build: streamdeck-logitech-litra
 
@@ -23,3 +24,8 @@ test:
 # From https://github.com/bobheadxi/readable
 lint:
     readable fmt README.md
+
+## Package the plugin for distribution to Elgato
+package:
+    mkdir build
+    {{ DISTRIBUTION_TOOL }} -b -i {{ PLUGIN }} -o build/

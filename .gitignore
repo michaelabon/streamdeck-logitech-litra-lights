@@ -340,3 +340,5 @@ $RECYCLE.BIN/
 logs/*
 !logs/.gitkeep
 streamdeck-logitech-litra
+build/
+TODO.txt

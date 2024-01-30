@@ -37,7 +37,7 @@
   "CodePathWindows": "streamdeck-logitech-litra.exe",
   "CodePathMac": "streamdeck-logitech-litra",
   "CodePath": "streamdeck-logitech-litra",
-  "Description": "Control your Logitech Litra lights",
+  "Description": "Control your Logitech Litra Glow lights directly from the Stream Deck.",
   "Icon": "icons/pluginIcon",
   "Name": "Logitech Litra",
   "OS": [
