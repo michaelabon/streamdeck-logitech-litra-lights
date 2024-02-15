@@ -1,1 +1,2 @@
 *.lockb binary diff=lockb
+*.go text eol=lf

@@ -4,12 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	logitech "github.com/michaelabon/streamdeck-logitech-litra/internal/logitech_hid"
-	"github.com/samwho/streamdeck"
-	"github.com/sstallion/go-hid"
 	"log"
 	"os"
 	"strconv"
+
+	logitech "github.com/michaelabon/streamdeck-logitech-litra/internal/logitech_hid"
+	"github.com/samwho/streamdeck"
+	"github.com/sstallion/go-hid"
 )
 
 type Settings struct {
@@ -188,8 +189,10 @@ func handleSetLights(ctx context.Context, client *streamdeck.Client, event strea
 	return client.SetTitle(ctx, strconv.Itoa(int(s.Temperature)), streamdeck.HardwareAndSoftware)
 }
 
-const VID = 0x046d
-const PID = 0xc900
+const (
+	VID = 0x046d
+	PID = 0xc900
+)
 
 // writeToLights opens a connection to each light attached to the computer
 // and then invokes theFunc for each light.

@@ -18,11 +18,21 @@ streamdeck-logitech-litra:
     touch {{ PLUGIN }}/{{ OUTPUT }} # Stream Deck complains about a missing Mac binary while on Windows. (Why??)
 
 
+[windows]
+install: install-go-tools
+
+[macos]
+install: install-go-tools
+
+
 ## WSL support
 [linux]
-install:
+install: install-go-tools
     sudo apt install gcc-mingw-w64
 
+install-go-tools:
+    go install github.com/daixiang0/gci@latest
+    go install mvdan.cc/gofumpt@latest
 
 
 
@@ -41,9 +51,9 @@ test:
     go test -C go ./...
 
 
-# From https://github.com/bobheadxi/readable
 lint:
-    readable fmt README.md
+    cd go && gci write .
+    cd go && gofumpt -l -w .
 
 
 ## Package the plugin for distribution to Elgato

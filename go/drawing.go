@@ -1,10 +1,11 @@
 package main
 
 import (
-	temperature2 "github.com/maruel/temperature"
 	"image"
 	"image/color"
 	"log"
+
+	temperature2 "github.com/maruel/temperature"
 )
 
 func clamp(n, min, max int) int {
