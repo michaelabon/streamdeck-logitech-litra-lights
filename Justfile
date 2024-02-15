@@ -1,12 +1,14 @@
+# Not a UUID, I know. Blame Elgato.
+UUID := "ca.michaelabon.logitechlitra"
+
 GO := "go"
 GOFLAGS := ""
-PLUGIN := "ca.michaelabon.logitechlitra.sdPlugin"
+PLUGIN := UUID + ".sdPlugin"
 DISTRIBUTION_TOOL := "$HOME/.bin/DistributionTool"
+TARGET := "streamdeck-logitech-litra"
 
-build: streamdeck-logitech-litra
-
-streamdeck-logitech-litra:
-    {{ GO }} build {{ GOFLAGS }} -o ../{{ PLUGIN }}/streamdeck-logitech-litra -C go .
+build:
+    {{ GO }} build {{ GOFLAGS }} -o ../{{ PLUGIN }}/{{ TARGET }} -C ./go .
 
 [macos]
 link:
@@ -18,12 +20,31 @@ link:
 link:
     mklink /D "%AppData%\Elgato\StreamDeck\Plugins\{{ PLUGIN }}" "{{ justfile_directory() }}/{{ PLUGIN }}"
 
+install:
+    git submodule update --init --recursive
+    cd ./go && go mod tidy
+    go install mvdan.cc/gofumpt@latest
+    go install github.com/segmentio/golines@latest
+    npm install -g @elgato/cli
+
+lint:
+    gofumpt -w ./go
+    golines -w ./go
+
 test:
     go test -C go ./...
 
-# From https://github.com/bobheadxi/readable
-lint:
-    readable fmt README.md
+[macos]
+debug:
+    open "http://localhost:23654/"
+
+[windows]
+debug:
+    start "" "http://localhost:23654/"
+
+start:
+    streamdeck restart {{ UUID }}
+restart: start
 
 ## Package the plugin for distribution to Elgato
 package:

@@ -1,4 +1,4 @@
-# Stream Deck Logitech Litra Lights
+# Elgato Stream Deck – Logitech Litra Lights
 
 A plugin for the Elgato Stream Deck that allow for control over your Logitech Litra Glow lights.
 
@@ -12,7 +12,7 @@ The file `go.mod` contains the minimum version of go required.
 1. Clone the repository onto your Windows or macOS computer.
 2. Install [just](https://github.com/casey/just) if you don't have it already.
    (`just` is an alternative to `make`).
-3. Run `just build link`, to both build the plugin and create a symlink in your Elgato Plugins directory.
+3. Run `just install build link`, to both build the plugin and create a symlink in your Elgato Plugins directory.
 4. Restart the Elgato Stream Deck application on your computer.
 5. In the Elgato Stream Deck application, on the right-hand side:
    1. Find the new *Logitech Litra* category.
@@ -43,4 +43,4 @@ You can run tests with `just test`.
 
 ## License
 
-GNU General Public License v3.0
+GNU General Public License v3.0, available at LICENSE
