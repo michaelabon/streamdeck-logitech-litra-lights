@@ -5,10 +5,36 @@ GO := "go"
 GOFLAGS := ""
 PLUGIN := UUID + ".sdPlugin"
 DISTRIBUTION_TOOL := "$HOME/.bin/DistributionTool"
-TARGET := "streamdeck-logitech-litra"
+OUTPUT := "streamdeck-logitech-litra"
 
+[macos]
 build:
-    {{ GO }} build {{ GOFLAGS }} -o ../{{ PLUGIN }}/{{ TARGET }} -C ./go .
+    GOOS=windows GOARCH=amd64 {{ GO }} build -C go {{ GOFLAGS }} -o ../{{ PLUGIN }}/{{ OUTPUT }}.exe .
+    GOOS=darwin  GOARCH=amd64 {{ GO }} build -C go {{ GOFLAGS }} -o ../{{ PLUGIN }}/{{ OUTPUT }}     .
+
+# WSL support
+[linux]
+build:
+    CC=x86_64-w64-mingw32-gcc CGO_ENABLED=1 GOOS=windows GOARCH=amd64 {{ GO }} build -C go {{ GOFLAGS }} -o ../{{ PLUGIN }}/{{ OUTPUT }}.exe .
+    touch {{ PLUGIN }}/{{ OUTPUT }} # Stream Deck complains about a missing Mac binary while on Windows. (Why??)
+
+
+## WSL support
+[linux]
+install: install-base
+    sudo apt install gcc-mingw-w64
+
+[macos]
+install: install-base
+
+install-base:
+    git submodule update --init --recursive
+    cd ./go && go mod tidy
+    go install mvdan.cc/gofumpt@latest
+    go install github.com/segmentio/golines@latest
+    npm install -g @elgato/cli
+
+
 
 [macos]
 link:
@@ -20,19 +46,13 @@ link:
 link:
     mklink /D "%AppData%\Elgato\StreamDeck\Plugins\{{ PLUGIN }}" "{{ justfile_directory() }}/{{ PLUGIN }}"
 
-install:
-    git submodule update --init --recursive
-    cd ./go && go mod tidy
-    go install mvdan.cc/gofumpt@latest
-    go install github.com/segmentio/golines@latest
-    npm install -g @elgato/cli
+test:
+    go test -C go ./...
+
 
 lint:
     gofumpt -w ./go
     golines -w ./go
-
-test:
-    go test -C go ./...
 
 [macos]
 debug:
