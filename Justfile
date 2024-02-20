@@ -5,35 +5,55 @@ GO := "go"
 GOFLAGS := ""
 PLUGIN := UUID + ".sdPlugin"
 DISTRIBUTION_TOOL := "$HOME/.bin/DistributionTool"
-OUTPUT := "streamdeck-logitech-litra"
+TARGET := "streamdeck-logitech-litra"
+
+
+## BUILD
+
 
 [macos]
 build:
-    GOOS=windows GOARCH=amd64 {{ GO }} build -C go {{ GOFLAGS }} -o ../{{ PLUGIN }}/{{ OUTPUT }}.exe .
-    GOOS=darwin  GOARCH=amd64 {{ GO }} build -C go {{ GOFLAGS }} -o ../{{ PLUGIN }}/{{ OUTPUT }}     .
+    GOOS=windows GOARCH=amd64 {{ GO }} build -C go {{ GOFLAGS }} -o ../{{ PLUGIN }}/{{ TARGET }}.exe .
+    GOOS=darwin  GOARCH=amd64 {{ GO }} build -C go {{ GOFLAGS }} -o ../{{ PLUGIN }}/{{ TARGET }}     .
 
-# WSL support
-[linux]
+[linux] # WSL support
 build:
-    CC=x86_64-w64-mingw32-gcc CGO_ENABLED=1 GOOS=windows GOARCH=amd64 {{ GO }} build -C go {{ GOFLAGS }} -o ../{{ PLUGIN }}/{{ OUTPUT }}.exe .
-    touch {{ PLUGIN }}/{{ OUTPUT }} # Stream Deck complains about a missing Mac binary while on Windows. (Why??)
+    CC=x86_64-w64-mingw32-gcc CGO_ENABLED=1 GOOS=windows GOARCH=amd64 {{ GO }} build -C go {{ GOFLAGS }} -o ../{{ PLUGIN }}/{{ TARGET }}.exe .
+    touch {{ PLUGIN }}/{{ TARGET }} # Stream Deck complains about a missing Mac binary while on Windows. (Why??)
+
+clean:
+    rm {{ PLUGIN }}/{{ TARGET }}
+    rm {{ PLUGIN }}/{{ TARGET }}.exe
+    rm {{ PLUGIN }}/logs/*
 
 
-## WSL support
-[linux]
-install: _install-base
+## INSTALL DEV DEPENDENCIES
+
+
+[windows]
+install: _install-submodules _install-go-tools
+
+[macos]
+install: _install-submodules _install-go-tools
+
+[linux] ## WSL support
+install: install-go-tools
     sudo apt install gcc-mingw-w64
 
-[macos]
-install: _install-base
-    brew install mingw-w64
-
-_install-base:
+_install-submodules:
     git submodule update --init --recursive
     cd ./go && go mod tidy
+
+_install-go-tools:
     go install github.com/daixiang0/gci@latest
     go install mvdan.cc/gofumpt@latest
     go install github.com/segmentio/golines@latest
+
+
+## LINK
+## You only need to do this one time.
+## It connects your output directory to your Stream Deck
+
 
 [macos]
 link:
@@ -45,14 +65,45 @@ link:
 link:
     mklink /D "%AppData%\Elgato\StreamDeck\Plugins\{{ PLUGIN }}" "{{ justfile_directory() }}/{{ PLUGIN }}"
 
+[macos]
+unlink:
+    unlink "$HOME/Library/Application Support/com.elgato.StreamDeck/Plugins/{{ PLUGIN }}"
+
+install:
+    git submodule update --init --recursive
+    cd ./go && go mod tidy
+    go install mvdan.cc/gofumpt@latest
+    go install github.com/segmentio/golines@latest
+
+
+## TEST
+## Run unit tests
+
+
 test:
     go test -C go ./...
 
 
+## LINT
+## Ensure that all the files are formatted correctly.
+
+
+[macos]
 lint:
     cd go && gci write .
     gofumpt -w ./go
     golines -w ./go
+    find ./go ./{{ PLUGIN }}/icons -type f -name '*.svg' -exec xmllint --pretty 2 --output '{}' '{}' \;
+
+[windows]
+lint:
+    cd go && gci write .
+    gofumpt -w ./go
+    golines -w ./go
+
+
+## DEBUG & RESTART
+## Useful for local development
 
 [macos]
 debug:
@@ -66,7 +117,11 @@ start:
     npx streamdeck restart {{ UUID }}
 restart: start
 
-# Package the plugin for distribution to Elgato
+
+## PACKAGE
+
+
+## Package the plugin for distribution to Elgato
 package:
-    mkdir build
+    mkdir -p build
     {{ DISTRIBUTION_TOOL }} -b -i {{ PLUGIN }} -o build/
