@@ -21,13 +21,13 @@ build:
 
 ## WSL support
 [linux]
-install: install-base
+install: _install-base
     sudo apt install gcc-mingw-w64
 
 [macos]
-install: install-base
+install: _install-base
 
-install-base:
+_install-base:
     git submodule update --init --recursive
     cd ./go && go mod tidy
     go install mvdan.cc/gofumpt@latest
