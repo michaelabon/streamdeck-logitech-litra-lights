@@ -26,6 +26,7 @@ install: _install-base
 
 [macos]
 install: _install-base
+    brew install mingw-w64
 
 _install-base:
     git submodule update --init --recursive
