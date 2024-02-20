@@ -66,7 +66,7 @@ start:
     streamdeck restart {{ UUID }}
 restart: start
 
-## Package the plugin for distribution to Elgato
+# Package the plugin for distribution to Elgato
 package:
     mkdir build
     {{ DISTRIBUTION_TOOL }} -b -i {{ PLUGIN }} -o build/
