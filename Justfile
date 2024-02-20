@@ -33,9 +33,6 @@ _install-base:
     go install github.com/daixiang0/gci@latest
     go install mvdan.cc/gofumpt@latest
     go install github.com/segmentio/golines@latest
-    npm install -g @elgato/cli
-
-
 
 [macos]
 link:
@@ -65,7 +62,7 @@ debug:
     start "" "http://localhost:23654/"
 
 start:
-    streamdeck restart {{ UUID }}
+    npx streamdeck restart {{ UUID }}
 restart: start
 
 # Package the plugin for distribution to Elgato
