@@ -1,22 +1,29 @@
-<svg version="1.1" width="1000" height="1000" xmlns="http://www.w3.org/2000/svg">
-    <rect x="200" y="200"
-          width="600" height="600"
-          stroke="#333333"
-          stroke-width="10"
-          fill="#f2f2b2"
-          rx="40"
-          ry="40"
-    />
+<?xml version="1.0"?>
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    version="1.1"
+    width="1000"
+    height="1000"
+  >
+  <rect
+      x="200"
+      y="200"
+      width="600"
+      height="600"
+      stroke="#333333"
+      stroke-width="10"
+      fill="#f2f2b2"
+      rx="40"
+      ry="40"
+  />
 
-    <path d="
-    M 400 800
-    C 400 875 350 800 350 950
-    V 1000
-    H 650
-    V 950
-    C 650 800 600 875 600 800
-    Z
-  " stroke="#333333" fill="#181111" stroke-width="10"/>
+  <path
+      d="M400,800c0,75,-50,0,-50,150v50h300v-50c0,-150,-50,-75,-50,-150z"
+      stroke="#333333"
+      fill="#181111"
+      stroke-width="10"
+  />
 
 
-</svg>
+</svg
+>

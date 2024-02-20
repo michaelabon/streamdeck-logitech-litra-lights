@@ -4,12 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	logitech "github.com/michaelabon/streamdeck-logitech-litra/internal/logitech_hid"
-	"github.com/samwho/streamdeck"
-	"github.com/sstallion/go-hid"
 	"log"
 	"os"
 	"strconv"
+
+	logitech "github.com/michaelabon/streamdeck-logitech-litra/internal/logitech_hid"
+	"github.com/samwho/streamdeck"
+	"github.com/sstallion/go-hid"
 )
 
 type Settings struct {
@@ -60,89 +61,112 @@ func setup(client *streamdeck.Client) {
 func setupTurnOffLightsAction(client *streamdeck.Client) {
 	turnOffLightsAction := client.Action("ca.michaelabon.logitech-litra-lights.off")
 
-	turnOffLightsAction.RegisterHandler(streamdeck.KeyDown, func(ctx context.Context, client *streamdeck.Client, event streamdeck.Event) error {
-		return handleTurnOffLights(ctx, client)
-	})
+	turnOffLightsAction.RegisterHandler(
+		streamdeck.KeyDown,
+		func(ctx context.Context, client *streamdeck.Client, event streamdeck.Event) error {
+			return handleTurnOffLights(ctx, client)
+		},
+	)
 }
 
 func setupSetLightsAction(client *streamdeck.Client, settings map[string]*Settings) {
 	setLightsAction := client.Action("ca.michaelabon.logitech-litra-lights.set")
 
-	setLightsAction.RegisterHandler(streamdeck.WillAppear, func(ctx context.Context, client *streamdeck.Client, event streamdeck.Event) error {
-		p := streamdeck.WillAppearPayload{}
-		if err := json.Unmarshal(event.Payload, &p); err != nil {
+	setLightsAction.RegisterHandler(
+		streamdeck.WillAppear,
+		func(ctx context.Context, client *streamdeck.Client, event streamdeck.Event) error {
+			p := streamdeck.WillAppearPayload{}
+			if err := json.Unmarshal(event.Payload, &p); err != nil {
+				return err
+			}
+
+			s, ok := settings[event.Context]
+			if !ok {
+				s = &Settings{}
+				settings[event.Context] = s
+			}
+
+			if err := json.Unmarshal(p.Settings, s); err != nil {
+				return err
+			}
+
+			if s.Temperature == 0 {
+				s.Temperature = 3200
+				s.Brightness = 50
+			}
+
+			background, err := streamdeck.Image(generateBackground(*s))
+			if err != nil {
+				log.Println("Error while generating streamdeck image", err)
+				return err
+			}
+
+			if err := client.SetImage(ctx, background, streamdeck.HardwareAndSoftware); err != nil {
+				return err
+			}
+
+			err = client.SetTitle(
+				ctx,
+				strconv.Itoa(int(s.Temperature)),
+				streamdeck.HardwareAndSoftware,
+			)
+
 			return err
-		}
+		},
+	)
 
-		s, ok := settings[event.Context]
-		if !ok {
-			s = &Settings{}
-			settings[event.Context] = s
-		}
+	setLightsAction.RegisterHandler(
+		streamdeck.DidReceiveSettings,
+		func(ctx context.Context, client *streamdeck.Client, event streamdeck.Event) error {
+			p := streamdeck.DidReceiveSettingsPayload{}
+			if err := json.Unmarshal(event.Payload, &p); err != nil {
+				return err
+			}
 
-		if err := json.Unmarshal(p.Settings, s); err != nil {
+			s, ok := settings[event.Context]
+			if !ok {
+				s = &Settings{}
+				settings[event.Context] = s
+			}
+
+			if err := json.Unmarshal(p.Settings, s); err != nil {
+				return err
+			}
+
+			background, err := streamdeck.Image(generateBackground(*s))
+			if err != nil {
+				log.Println("Error while generating streamdeck image", err)
+				return err
+			}
+
+			if err := client.SetImage(ctx, background, streamdeck.HardwareAndSoftware); err != nil {
+				return err
+			}
+
+			err = client.SetTitle(
+				ctx,
+				strconv.Itoa(int(s.Temperature)),
+				streamdeck.HardwareAndSoftware,
+			)
+
 			return err
-		}
+		},
+	)
 
-		if s.Temperature == 0 {
-			s.Temperature = 3200
-			s.Brightness = 50
-		}
+	setLightsAction.RegisterHandler(
+		streamdeck.WillDisappear,
+		func(ctx context.Context, client *streamdeck.Client, event streamdeck.Event) error {
+			s, _ := settings[event.Context]
+			return client.SetSettings(ctx, s)
+		},
+	)
 
-		background, err := streamdeck.Image(generateBackground(*s))
-		if err != nil {
-			log.Println("Error while generating streamdeck image", err)
-			return err
-		}
-
-		if err := client.SetImage(ctx, background, streamdeck.HardwareAndSoftware); err != nil {
-			return err
-		}
-
-		err = client.SetTitle(ctx, strconv.Itoa(int(s.Temperature)), streamdeck.HardwareAndSoftware)
-
-		return err
-	})
-
-	setLightsAction.RegisterHandler(streamdeck.DidReceiveSettings, func(ctx context.Context, client *streamdeck.Client, event streamdeck.Event) error {
-		p := streamdeck.DidReceiveSettingsPayload{}
-		if err := json.Unmarshal(event.Payload, &p); err != nil {
-			return err
-		}
-
-		s, ok := settings[event.Context]
-		if !ok {
-			s = &Settings{}
-			settings[event.Context] = s
-		}
-
-		if err := json.Unmarshal(p.Settings, s); err != nil {
-			return err
-		}
-
-		background, err := streamdeck.Image(generateBackground(*s))
-		if err != nil {
-			log.Println("Error while generating streamdeck image", err)
-			return err
-		}
-
-		if err := client.SetImage(ctx, background, streamdeck.HardwareAndSoftware); err != nil {
-			return err
-		}
-
-		err = client.SetTitle(ctx, strconv.Itoa(int(s.Temperature)), streamdeck.HardwareAndSoftware)
-
-		return err
-	})
-
-	setLightsAction.RegisterHandler(streamdeck.WillDisappear, func(ctx context.Context, client *streamdeck.Client, event streamdeck.Event) error {
-		s, _ := settings[event.Context]
-		return client.SetSettings(ctx, s)
-	})
-
-	setLightsAction.RegisterHandler(streamdeck.KeyDown, func(ctx context.Context, client *streamdeck.Client, event streamdeck.Event) error {
-		return handleSetLights(ctx, client, event, settings)
-	})
+	setLightsAction.RegisterHandler(
+		streamdeck.KeyDown,
+		func(ctx context.Context, client *streamdeck.Client, event streamdeck.Event) error {
+			return handleSetLights(ctx, client, event, settings)
+		},
+	)
 }
 
 func handleTurnOffLights(ctx context.Context, client *streamdeck.Client) error {
@@ -155,7 +179,12 @@ func handleTurnOffLights(ctx context.Context, client *streamdeck.Client) error {
 	return nil
 }
 
-func handleSetLights(ctx context.Context, client *streamdeck.Client, event streamdeck.Event, settings map[string]*Settings) error {
+func handleSetLights(
+	ctx context.Context,
+	client *streamdeck.Client,
+	event streamdeck.Event,
+	settings map[string]*Settings,
+) error {
 	s, ok := settings[event.Context]
 	if !ok {
 		return fmt.Errorf("couldn't find settings for context %v", event.Context)
@@ -188,8 +217,10 @@ func handleSetLights(ctx context.Context, client *streamdeck.Client, event strea
 	return client.SetTitle(ctx, strconv.Itoa(int(s.Temperature)), streamdeck.HardwareAndSoftware)
 }
 
-const VID = 0x046d
-const PID = 0xc900
+const (
+	VID = 0x046d
+	PID = 0xc900
+)
 
 // writeToLights opens a connection to each light attached to the computer
 // and then invokes theFunc for each light.

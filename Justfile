@@ -30,14 +30,11 @@ clean:
 ## INSTALL DEV DEPENDENCIES
 
 
-[windows]
-install: _install-submodules _install-go-tools
-
-[macos]
+[windows, macos]
 install: _install-submodules _install-go-tools
 
 [linux] ## WSL support
-install: install-go-tools
+install: _install-go-tools
     sudo apt install gcc-mingw-w64
 
 _install-submodules:
@@ -69,12 +66,6 @@ link:
 unlink:
     unlink "$HOME/Library/Application Support/com.elgato.StreamDeck/Plugins/{{ PLUGIN }}"
 
-install:
-    git submodule update --init --recursive
-    cd ./go && go mod tidy
-    go install mvdan.cc/gofumpt@latest
-    go install github.com/segmentio/golines@latest
-
 
 ## TEST
 ## Run unit tests
@@ -88,18 +79,18 @@ test:
 ## Ensure that all the files are formatted correctly.
 
 
-[macos]
-lint:
-    cd go && gci write .
-    gofumpt -w ./go
-    golines -w ./go
-    find ./go ./{{ PLUGIN }}/icons -type f -name '*.svg' -exec xmllint --pretty 2 --output '{}' '{}' \;
-
 [windows]
 lint:
     cd go && gci write .
     gofumpt -w ./go
     golines -w ./go
+
+[macos, linux]
+lint:
+    cd go && gci write .
+    gofumpt -w ./go
+    golines -w ./go
+    find ./go ./{{ PLUGIN }}/icons -type f -name '*.svg' -exec xmllint --pretty 2 --output '{}' '{}' \;
 
 
 ## DEBUG & RESTART

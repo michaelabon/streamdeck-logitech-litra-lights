@@ -21,17 +21,33 @@ func TestConvertBrightness(t *testing.T) {
 		result, err := ConvertBrightness(test.input)
 
 		if err != nil && err.Error() != test.errMsg {
-			t.Errorf("For input %d, expected error message '%s', but got '%s'", test.input, test.errMsg, err.Error())
+			t.Errorf(
+				"For input %d, expected error message '%s', but got '%s'",
+				test.input,
+				test.errMsg,
+				err.Error(),
+			)
 		}
 
 		if err == nil && len(result) != len(test.expected) {
-			t.Errorf("For input %d, expected byte slice of length %d, but got length %d", test.input, len(test.expected), len(result))
+			t.Errorf(
+				"For input %d, expected byte slice of length %d, but got length %d",
+				test.input,
+				len(test.expected),
+				len(result),
+			)
 		}
 
 		if err == nil {
 			for i := range result {
 				if result[i] != test.expected[i] {
-					t.Errorf("For input %d, at index %d, expected %x, but got %x", test.input, i, test.expected[i], result[i])
+					t.Errorf(
+						"For input %d, at index %d, expected %x, but got %x",
+						test.input,
+						i,
+						test.expected[i],
+						result[i],
+					)
 				}
 			}
 		}
@@ -55,17 +71,33 @@ func TestConvertTemperature(t *testing.T) {
 		result, err := ConvertTemperature(test.input)
 
 		if err != nil && err.Error() != test.errMsg {
-			t.Errorf("For input %d, expected error message '%s', but got '%s'", test.input, test.errMsg, err.Error())
+			t.Errorf(
+				"For input %d, expected error message '%s', but got '%s'",
+				test.input,
+				test.errMsg,
+				err.Error(),
+			)
 		}
 
 		if err == nil && len(result) != len(test.expected) {
-			t.Errorf("For input %d, expected byte slice of length %d, but got length %d", test.input, len(test.expected), len(result))
+			t.Errorf(
+				"For input %d, expected byte slice of length %d, but got length %d",
+				test.input,
+				len(test.expected),
+				len(result),
+			)
 		}
 
 		if err == nil {
 			for i := range result {
 				if result[i] != test.expected[i] {
-					t.Errorf("For input %d, at index %d, expected %x, but got %x", test.input, i, test.expected[i], result[i])
+					t.Errorf(
+						"For input %d, at index %d, expected %x, but got %x",
+						test.input,
+						i,
+						test.expected[i],
+						result[i],
+					)
 				}
 			}
 		}

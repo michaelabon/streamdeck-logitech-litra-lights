@@ -1,13 +1,27 @@
-<svg version="1.1" width="1000" height="1000" xmlns="http://www.w3.org/2000/svg" viewBox="100 100 800 900" >
-    <rect x="200" y="200" width="600" height="600" stroke="none" fill="rgb(226, 226, 226)" rx="40" ry="40"  />
+<?xml version="1.0"?>
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    version="1.1"
+    width="1000"
+    height="1000"
+    viewBox="100 100 800 900"
+  >
+  <rect
+      x="200"
+      y="200"
+      width="600"
+      height="600"
+      stroke="none"
+      fill="rgb(226, 226, 226)"
+      rx="40"
+      ry="40"
+  />
 
-    <path d="
-    M 400 820
-    c 0 75 -50 0 -50 150
-    V 1000
-    H 650
-    V 950
-    c 0 -150 -50 -75 -50 -130
-    Z
-  " stroke="none" fill="rgb(226, 226, 226)" stroke-width="10" />
-</svg>
+  <path
+      d="M400,820c0,75,-50,0,-50,150v30h300v-50c0,-150,-50,-75,-50,-130z"
+      stroke="none"
+      fill="rgb(226, 226, 226)"
+      stroke-width="10"
+  />
+</svg
+>
