@@ -30,6 +30,7 @@ install: _install-base
 _install-base:
     git submodule update --init --recursive
     cd ./go && go mod tidy
+    go install github.com/daixiang0/gci@latest
     go install mvdan.cc/gofumpt@latest
     go install github.com/segmentio/golines@latest
     npm install -g @elgato/cli
@@ -51,6 +52,7 @@ test:
 
 
 lint:
+    cd go && gci write .
     gofumpt -w ./go
     golines -w ./go
 
