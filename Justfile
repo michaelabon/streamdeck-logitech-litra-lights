@@ -39,7 +39,7 @@ install: _install-go-tools
 
 _install-submodules:
     git submodule update --init --recursive
-    cd ./go && go mod tidy
+    cd ./go && go mod download
 
 _install-go-tools:
     go install github.com/daixiang0/gci@latest
