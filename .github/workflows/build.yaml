@@ -15,6 +15,7 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version-file: 'go/go.mod'
+          cache-dependency-path: 'go/go.sum'
       
       - 
         name: Build
@@ -27,6 +28,7 @@ jobs:
           name: streamdeck-logitech-litra
           path: |
             go/streamdeck-logitech-litra
+
   build-windows:
     runs-on: windows-latest
     steps:
@@ -40,6 +42,7 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version-file: 'go/go.mod'
+          cache-dependency-path: 'go/go.sum'
       
       - 
         name: Build
