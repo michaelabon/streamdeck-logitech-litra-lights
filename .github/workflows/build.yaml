@@ -66,6 +66,13 @@ jobs:
       -
         uses: actions/download-artifact@v4
         with:
+          name: streamdeck-logitech-litra
+          path: ca.michaelabon.logitechlitra.sdPlugin
+          merge-multiple: true
+      -
+        uses: actions/download-artifact@v4
+        with:
+          name: streamdeck-logitech-litra.exe
           path: ca.michaelabon.logitechlitra.sdPlugin
           merge-multiple: true
       -
