@@ -1,5 +1,5 @@
 {
-	"$schema": "https://cdn.jsdelivr.net/npm/@elgato/schemas@latest/streamdeck/plugins/manifest.json", 
+  "$schema": "https://cdn.jsdelivr.net/npm/@elgato/schemas@latest/streamdeck/plugins/manifest.json",
   "Actions": [
     {
       "Icon": "icons/setLightsAction",
@@ -8,7 +8,7 @@
         {
           "Image": "icons/setLightsAction",
           "TitleAlignment": "middle",
-          "FontSize": 24
+          "FontSize": "24"
         }
       ],
       "SupportedInMultiActions": true,
@@ -23,7 +23,7 @@
           "Image": "icons/turnOffLightsAction",
           "TitleAlignment": "middle",
           "Title": "Off",
-          "FontSize": 24
+          "FontSize": "24"
         }
       ],
       "SupportedInMultiActions": true,
@@ -54,6 +54,7 @@
   "Software": {
     "MinimumVersion": "6.4"
   },
+  "UUID": "ca.michaelabon.logitechlitra",
   "URL": "https://github.com/michaelabon/streamdeck-logitech-litra-lights",
   "Version": "1.0.2"
 }

@@ -7,25 +7,75 @@ jobs:
   build-macos:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v3
+      - 
+        uses: actions/checkout@v4
       
-      - name: Set up Go
+      - 
+        name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version-file: 'go/go.mod'
       
-      - name: Build
+      - 
+        name: Build
         run: go build -C go -v -o streamdeck-logitech-litra .
+
+      -
+        name: Archive macOS build
+        uses: actions/upload-artifact@v4
+        with:
+          name: streamdeck-logitech-litra
+          path: |
+            streamdeck-logitech-litra
   build-windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v3
+      - 
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
       
-      - name: Set up Go
+      - 
+        name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version-file: 'go/go.mod'
       
-      - name: Build
+      - 
+        name: Build
         run: go build -C go -v -o streamdeck-logitech-litra.exe .
       
+      -
+        name: Archive Windows build
+        uses: actions/upload-artifact@v4
+        with:
+          name: streamdeck-logitech-litra.exe
+          path: |
+            streamdeck-logitech-litra.exe
+  
+  create-release:
+    runs-on: windows-latest
+    needs:
+      - build-macos
+      - build-windows
+    steps:
+      - 
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+      -
+        uses: actions/download-artifact@v4
+        with:
+          path: ca.michaelabon.logitechlitra.sdPlugin
+          merge-multiple: true
+      -
+        name: Package
+        run: 'tools\DistributionTool.exe -b -i ca.michaelabon.logitechlitra.sdPlugin -o .'
+
+      -
+          name: Archive built package
+          uses: actions/upload-artifact@v4
+          with:
+            name: ca.michaelabon.logitechlitra.streamDeckPlugin
+            path: |
+              ca.michaelabon.logitechlitra.streamDeckPlugin
