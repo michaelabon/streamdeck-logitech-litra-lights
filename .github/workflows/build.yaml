@@ -76,9 +76,9 @@ jobs:
         run: 'tools\DistributionTool.exe -b -i ca.michaelabon.logitechlitra.sdPlugin -o .'
 
       -
-          name: Archive built package
-          uses: actions/upload-artifact@v4
-          with:
-            name: ca.michaelabon.logitechlitra.streamDeckPlugin
-            path: |
-              ca.michaelabon.logitechlitra.streamDeckPlugin
+        name: Archive built package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ca.michaelabon.logitechlitra.streamDeckPlugin
+          path: |
+            ca.michaelabon.logitechlitra.streamDeckPlugin
