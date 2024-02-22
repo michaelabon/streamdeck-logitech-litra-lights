@@ -26,7 +26,7 @@ jobs:
         with:
           name: streamdeck-logitech-litra
           path: |
-            streamdeck-logitech-litra
+            go/streamdeck-logitech-litra
   build-windows:
     runs-on: windows-latest
     steps:
@@ -51,7 +51,7 @@ jobs:
         with:
           name: streamdeck-logitech-litra.exe
           path: |
-            streamdeck-logitech-litra.exe
+            go/streamdeck-logitech-litra.exe
   
   create-release:
     runs-on: windows-latest
