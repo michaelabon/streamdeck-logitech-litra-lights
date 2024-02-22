@@ -1,0 +1,31 @@
+name: Build
+
+on:
+  push:
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: 'go/go.mod'
+      
+      - name: Build
+        run: go build -C go -v -o streamdeck-logitech-litra .
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: 'go/go.mod'
+      
+      - name: Build
+        run: go build -C go -v -o streamdeck-logitech-litra.exe .
+      
