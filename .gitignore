@@ -336,10 +336,10 @@ $RECYCLE.BIN/
 
 # End of https://www.toptal.com/developers/gitignore/api/node,intellij,macos,windows,vim
 
-
-logs/*
-!logs/.gitkeep
-streamdeck-logitech-litra
-streamdeck-logitech-litra.exe
-build/
+build/*
+!build/.gitkeep
+*/build/*
+!*/build/.gitkeep
+*/logs/*
+!*/logs/.gitkeep
 TODO.txt

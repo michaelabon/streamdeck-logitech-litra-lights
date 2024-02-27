@@ -5,7 +5,7 @@ GO := "go"
 GOFLAGS := ""
 PLUGIN := UUID + ".sdPlugin"
 DISTRIBUTION_TOOL := "$HOME/.bin/DistributionTool"
-TARGET := "streamdeck-logitech-litra"
+TARGET := "build/streamdeck-logitech-litra"
 
 
 ## BUILD
@@ -13,10 +13,11 @@ TARGET := "streamdeck-logitech-litra"
 
 [macos]
 build:
-    GOOS=windows GOARCH=amd64 {{ GO }} build -C go {{ GOFLAGS }} -o ../{{ PLUGIN }}/{{ TARGET }}.exe .
-    GOOS=darwin  GOARCH=amd64 {{ GO }} build -C go {{ GOFLAGS }} -o ../{{ PLUGIN }}/{{ TARGET }}     .
+    CC=x86_64-w64-mingw32-gcc CGO_ENABLED=1 GOOS=windows GOARCH=amd64 {{ GO }} build -C go {{ GOFLAGS }} -o ../{{ PLUGIN }}/{{ TARGET }}.exe .
+    CGO_ENABLED=1 GOOS=darwin  GOARCH=amd64 {{ GO }} build -C go {{ GOFLAGS }} -o ../{{ PLUGIN }}/{{ TARGET }}     .
 
-[linux] # WSL support
+# WSL support
+[linux]
 build:
     CC=x86_64-w64-mingw32-gcc CGO_ENABLED=1 GOOS=windows GOARCH=amd64 {{ GO }} build -C go {{ GOFLAGS }} -o ../{{ PLUGIN }}/{{ TARGET }}.exe .
     touch {{ PLUGIN }}/{{ TARGET }} # Stream Deck complains about a missing Mac binary while on Windows. (Why??)
@@ -116,3 +117,15 @@ restart: start
 package:
     mkdir -p build
     {{ DISTRIBUTION_TOOL }} -b -i {{ PLUGIN }} -o build/
+
+
+## LOGS
+
+
+[macos]
+logs-streamdeck:
+  cd "$HOME/Library/Logs/ElgatoStreamDeck" && cat $(ls -ltr | awk '{print $9}')
+
+[windows]
+logs-streamdeck:
+  cd "%appdata%\Elgato\StreamDeck\logs\"
