@@ -1,5 +1,5 @@
 {
-	"$schema": "https://cdn.jsdelivr.net/npm/@elgato/schemas@latest/streamdeck/plugins/manifest.json", 
+  "$schema": "https://cdn.jsdelivr.net/npm/@elgato/schemas@latest/streamdeck/plugins/manifest.json",
   "Actions": [
     {
       "Icon": "icons/setLightsAction",
@@ -34,8 +34,8 @@
   "Author": "Michael Abon",
   "Category": "Logitech Litra",
   "CategoryIcon": "icons/categoryIcon",
-  "CodePathMac": "streamdeck-logitech-litra",
-  "CodePath": "streamdeck-logitech-litra.exe",
+  "CodePathMac": "build/streamdeck-logitech-litra",
+  "CodePath": "build/streamdeck-logitech-litra.exe",
   "Description": "Control your Logitech Litra Glow lights directly from the Stream Deck.",
   "Icon": "icons/pluginIcon",
   "Name": "Logitech Litra",
