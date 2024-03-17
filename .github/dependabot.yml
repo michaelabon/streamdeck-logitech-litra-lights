@@ -13,17 +13,7 @@ updates:
       - michaelabon
     allow:
       - dependency-type: "all"
-    ignore:
-      - dependency-name: "golang.org/x/exp"
     groups:
       "golang.org/x":
         patterns:
           - "golang.org/x/*"
-  - package-ecosystem: "gomod"
-    directory: "/go"
-    schedule:
-      interval: monthly
-    assignees:
-      - michaelabon
-    allow:
-      - dependency-name: "golang.org/x/exp"
