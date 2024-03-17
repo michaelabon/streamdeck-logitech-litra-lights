@@ -7,6 +7,7 @@ PLUGIN := UUID + ".sdPlugin"
 DISTRIBUTION_TOOL := "$HOME/.bin/DistributionTool"
 TARGET := "build/streamdeck-logitech-litra"
 
+set windows-shell := ["powershell.exe", "-c"]
 
 ## BUILD
 
