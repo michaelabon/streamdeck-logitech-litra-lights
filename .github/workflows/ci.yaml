@@ -3,6 +3,10 @@ name: "CI"
 
 on:
   push:
+    branches:
+      - main
+  pull_request:
+
 
 permissions:
   # Required: read access to the content for analysis.
