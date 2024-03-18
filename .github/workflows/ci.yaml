@@ -1,0 +1,47 @@
+---
+name: "CI"
+
+on:
+  push:
+
+permissions:
+  # Required: read access to the content for analysis.
+  contents: read
+  # Optional: write access to checks to allow the action to annotate code in the PR.
+  checks: write
+  # Optional: read access to pull request. Use with `only-new-issues` option.
+  pull-requests: read
+
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        uses: actions/checkout@v4
+      -
+        uses: actions/setup-go@v5
+        with:
+          cache-dependency-path: "go/go.sum"
+          go-version-file: "go/go.mod"
+      -
+        name: golangci-lint
+        uses: golangci/golangci-lint-action@v4
+        with:
+          version: v1.56.2
+          working-directory: "./go"
+          only-new-issues: true
+  build:
+    runs-on: macos-latest
+    steps:
+      -
+        uses: actions/checkout@v4
+      -
+        uses: actions/setup-go@v5
+        with:
+          cache-dependency-path: "go/go.sum"
+          go-version-file: "go/go.mod"
+      -
+        run: brew install just
+      -
+        run: just build
