@@ -1,5 +1,5 @@
 {
-  "$schema": "https://cdn.jsdelivr.net/npm/@elgato/schemas@latest/streamdeck/plugins/manifest.json",
+  "$schema": "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
   "Actions": [
     {
       "Icon": "icons/setLightsAction",
