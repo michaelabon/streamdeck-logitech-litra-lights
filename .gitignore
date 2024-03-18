@@ -343,3 +343,4 @@ build/*
 */logs/*
 !*/logs/.gitkeep
 TODO.txt
+.idea/cody_history.xml
