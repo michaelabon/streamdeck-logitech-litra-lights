@@ -1,12 +1,14 @@
 ---
-run:
+output:
   show-stats: true
+  sort-results: true
 issues:
-  max-same-issues: 10
   exclude:
     # go-hid needs to be built for the platform specifically
     - "could not import github.com/sstallion/go-hid"
     - "undefined: hid"
+  fix: true
+  max-same-issues: 10
 linters:
   enable:
     - containedctx
