@@ -1,11 +1,11 @@
 # Not a UUID, I know. Blame Elgato.
-UUID := "ca.michaelabon.logitechlitra"
+UUID := "ca.michaelabon.logitech-litra-lights"
 
 GO := "go"
 GOFLAGS := ""
 PLUGIN := UUID + ".sdPlugin"
 DISTRIBUTION_TOOL := "$HOME/.bin/DistributionTool"
-TARGET := "build/streamdeck-logitech-litra"
+TARGET := "build/streamdeck-logitech-litra-lights"
 
 set windows-shell := ["powershell.exe", "-c"]
 
