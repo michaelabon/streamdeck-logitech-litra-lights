@@ -34,8 +34,8 @@
   "Author": "Michael Abon",
   "Category": "Logitech Litra",
   "CategoryIcon": "icons/categoryIcon",
-  "CodePathMac": "build/streamdeck-logitech-litra",
-  "CodePath": "build/streamdeck-logitech-litra.exe",
+  "CodePathMac": "build/streamdeck-logitech-litra-lights",
+  "CodePath": "build/streamdeck-logitech-litra-lights.exe",
   "Description": "Control your Logitech Litra Glow lights directly from the Stream Deck.",
   "Icon": "icons/pluginIcon",
   "Name": "Logitech Litra",
@@ -55,5 +55,6 @@
     "MinimumVersion": "6.4"
   },
   "URL": "https://github.com/michaelabon/streamdeck-logitech-litra-lights",
-  "Version": "1.0.3"
+  "UUID": "ca.michaelabon.logitech-litra-lights",
+  "Version": "1.0.3.0"
 }
