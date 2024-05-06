@@ -130,3 +130,10 @@ logs-streamdeck:
 [windows]
 logs-streamdeck:
   cd "%appdata%\Elgato\StreamDeck\logs\"
+
+
+## VERSIONING
+
+
+bump version:
+  yq --inplace --prettyPrint --output-format json '.Version = "{{ version }}"' {{ PLUGIN }}/manifest.json
