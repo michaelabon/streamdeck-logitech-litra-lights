@@ -32,8 +32,12 @@ clean:
 ## INSTALL DEV DEPENDENCIES
 
 
-[windows, macos]
+[windows]
 install: _install-submodules _install-go-tools
+
+[macos]
+install: _install-submodules _install-go-tools
+    brew install mingw-w64
 
 [linux] ## WSL support
 install: _install-go-tools
