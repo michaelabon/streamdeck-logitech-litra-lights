@@ -5,15 +5,27 @@
 
 version: 2
 updates:
-  - package-ecosystem: "gomod"
+  -
+    package-ecosystem: "gomod"
     directory: "/go"
     schedule:
-      interval: daily
-    assignees:
-      - michaelabon
+      interval: "weekly"
+      day: "tuesday"
+      time: "15:10"
+      timezone: "America/Winnipeg"
     allow:
-      - dependency-type: "all"
+      -
+        "dependency-type": "all"
+    assignees:
+      - "michaelabon"
+    labels:
+      - "dependencies"
     groups:
       "golang.org/x":
         patterns:
           - "golang.org/x/*"
+  -
+    package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
