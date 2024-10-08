@@ -11,7 +11,7 @@ updates:
     schedule:
       interval: "weekly"
       day: "tuesday"
-      time: "15:10"
+      time: "03:10"
       timezone: "America/Winnipeg"
     allow:
       -
