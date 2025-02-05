@@ -1,6 +1,6 @@
 module github.com/michaelabon/streamdeck-logitech-litra
 
-go 1.20
+go 1.23.6
 
 require (
 	github.com/maruel/temperature v1.0.0
