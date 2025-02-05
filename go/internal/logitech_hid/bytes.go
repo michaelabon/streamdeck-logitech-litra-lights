@@ -64,8 +64,10 @@ func ConvertTemperature(temperature uint16) ([]byte, error) {
 	b[1] = 0xff
 	b[2] = 0x04
 	b[3] = 0x9c
-	//nolint:gomnd // we're splitting a number into two bytes here
-	b[4] = byte(temperature >> 8)
+
+	// split the temperature into 2 bytes
+	const byteLength = 8
+	b[4] = byte(temperature >> byteLength)
 	b[5] = byte(temperature)
 
 	return b, nil
@@ -84,5 +86,9 @@ const (
 //		 100% brightness as the byte 250 or 0xfa,
 //		 (and everything in between)
 func calcBrightness(brightness uint8) byte {
-	return byte(int(float64(brightness-1.0)/(99.0)*(maxBrightnessByte-minBrightnessByte)) + minBrightnessByte)
+	return byte(
+		int(
+			float64(brightness-1.0)/(99.0)*(maxBrightnessByte-minBrightnessByte),
+		) + minBrightnessByte,
+	)
 }

@@ -13,15 +13,14 @@ linters:
   enable:
     - containedctx
     - contextcheck
+    - copyloopvar
     - dogsled
     - dupword
     - durationcheck
     - errchkjson
     - errname
     - errorlint
-    - execinquery
     - exhaustive
-    - exportloopref
     - forcetypeassert
     - gci
     - gocheckcompilerdirectives
@@ -29,9 +28,9 @@ linters:
     - goconst
     - gocritic
     - gofumpt
-    - gomnd
     - gosec
     - ireturn
+    - mnd
     - nilerr
     - nilnil
     - nlreturn
