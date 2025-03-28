@@ -344,3 +344,6 @@ build/*
 !*/logs/.gitkeep
 TODO.txt
 .idea/cody_history.xml
+hidapi/
+ca.michaelabon.logitech-litra-lights.sdPlugin/hidapi.dll
+ca.michaelabon.logitech-litra-lights.sdPlugin/libhidapi.dylib

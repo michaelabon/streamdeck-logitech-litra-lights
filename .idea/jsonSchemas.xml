@@ -8,8 +8,8 @@
             <SchemaInfo>
               <option name="generatedName" value="New Schema" />
               <option name="name" value="Manifest.json" />
-              <option name="relativePathToSchema" value="https://raw.githubusercontent.com/michaelabon/schemastore/abon/add-elgato-stream-deck/src/schemas/json/elgato-stream-deck-plugin.json" />
-              <option name="schemaVersion" value="JSON Schema version 7" />
+              <option name="relativePathToSchema" value="https://schemas.elgato.com/streamdeck/plugins/manifest.json" />
+              <option name="schemaVersion" value="JSON Schema 7" />
               <option name="patterns">
                 <list>
                   <Item>
