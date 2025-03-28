@@ -4,8 +4,8 @@ UUID := "ca.michaelabon.logitech-litra-lights"
 GO := "go"
 GOFLAGS := ""
 PLUGIN := UUID + ".sdPlugin"
-DISTRIBUTION_TOOL := "$HOME/.bin/DistributionTool"
 TARGET := "build/streamdeck-logitech-litra-lights"
+HIDAPI_DIR := "hidapi"
 
 set windows-shell := ["powershell.exe", "-c"]
 
@@ -13,25 +13,81 @@ set windows-shell := ["powershell.exe", "-c"]
 
 
 [macos]
-build:
-    CC=x86_64-w64-mingw32-gcc CGO_ENABLED=1 GOOS=windows GOARCH=amd64 {{ GO }} build -C go {{ GOFLAGS }} -o ../{{ PLUGIN }}/{{ TARGET }}.exe .
-    CGO_ENABLED=1 GOOS=darwin  GOARCH=amd64 {{ GO }} build -C go {{ GOFLAGS }} -o ../{{ PLUGIN }}/{{ TARGET }}     .
+build: setup-hidapi
+    # Windows build
+    CC=x86_64-w64-mingw32-gcc CGO_ENABLED=1 GOOS=windows GOARCH=amd64 \
+    CGO_LDFLAGS="-static-libgcc -L$(pwd)/{{ HIDAPI_DIR }}/windows -lhidapi" \
+    {{ GO }} build \
+    -C go \
+    {{ GOFLAGS }} \
+    -o ../{{ PLUGIN }}/{{ TARGET }}.exe \
+    .
+
+    # Copy Windows DLL as fallback in case static linking fails
+    cp $(pwd)/{{ HIDAPI_DIR }}/windows/hidapi.dll {{ PLUGIN }}/
+
+    # macOS build - build for both architectures
+    # Build for arm64 (Apple Silicon)
+    CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 \
+    CGO_LDFLAGS="-L$(pwd)/{{ HIDAPI_DIR }}/macos -lhidapi" \
+    {{ GO }} build \
+    -C go \
+    {{ GOFLAGS }} \
+    -o ../{{ PLUGIN }}/{{ TARGET }}_arm64 \
+    .
+
+    # Copy macOS dylib (with force flag to overwrite if needed)
+    rm -f {{ PLUGIN }}/libhidapi.dylib || true
+    cp -f $(pwd)/{{ HIDAPI_DIR }}/macos/libhidapi.dylib {{ PLUGIN }}/
+
+    # Fix macOS binary to reference the dylib relatively
+    install_name_tool -change libhidapi.dylib @executable_path/libhidapi.dylib {{ PLUGIN }}/{{ TARGET }}_arm64
 
 # WSL support
 [linux]
-build:
-    CC=x86_64-w64-mingw32-gcc CGO_ENABLED=1 GOOS=windows GOARCH=amd64 {{ GO }} build -C go {{ GOFLAGS }} -o ../{{ PLUGIN }}/{{ TARGET }}.exe .
+build: setup-hidapi
+    # Windows build - make sure we use the correct path
+    CC=x86_64-w64-mingw32-gcc CGO_ENABLED=1 GOOS=windows GOARCH=amd64 \
+    CGO_LDFLAGS="-static-libgcc -L$(pwd)/{{ HIDAPI_DIR }}/windows -lhidapi" \
+    {{ GO }} build \
+    -C go \
+    {{ GOFLAGS }} \
+    -o ../{{ PLUGIN }}/{{ TARGET }}.exe\
+    .
+
+    # Copy Windows DLL as fallback in case static linking fails
+    cp $(pwd)/{{ HIDAPI_DIR }}/windows/hidapi.dll {{ PLUGIN }}/
+
+    # Create dummy macOS file
     touch {{ PLUGIN }}/{{ TARGET }} # Stream Deck complains about a missing Mac binary while on Windows. (Why??)
 
-clean:
-    rm {{ PLUGIN }}/{{ TARGET }}
-    rm {{ PLUGIN }}/{{ TARGET }}.exe
-    rm {{ PLUGIN }}/logs/*
+# Setup HIDAPI library directory with required files
+setup-hidapi:
+    mkdir -p {{ HIDAPI_DIR }}/windows {{ HIDAPI_DIR }}/macos
 
+    # Download and extract Windows hidapi.dll (x64 version)
+    if [ ! -f {{ HIDAPI_DIR }}/windows/hidapi.dll ]; then \
+      curl -L https://github.com/libusb/hidapi/releases/download/hidapi-0.14.0/hidapi-win.zip -o {{ HIDAPI_DIR }}/hidapi-win.zip && \
+      unzip -j {{ HIDAPI_DIR }}/hidapi-win.zip 'x64/hidapi.dll' -d {{ HIDAPI_DIR }}/windows && \
+      rm -f {{ HIDAPI_DIR }}/hidapi-win.zip; \
+    fi
+
+    # For macOS, install hidapi via homebrew and copy the dylib
+    if [ ! -f {{ HIDAPI_DIR }}/macos/libhidapi.dylib ]; then \
+      brew list hidapi || brew install hidapi && \
+      cp $(brew --prefix hidapi)/lib/libhidapi.dylib {{ HIDAPI_DIR }}/macos/; \
+    fi
+
+clean:
+    rm -f {{ PLUGIN }}/{{ TARGET }}
+    rm -f {{ PLUGIN }}/{{ TARGET }}_arm64
+    rm -f {{ PLUGIN }}/{{ TARGET }}.exe
+    rm -f {{ PLUGIN }}/hidapi.dll
+    rm -f {{ PLUGIN }}/libhidapi.dylib
+    rm -f {{ PLUGIN }}/logs/*
+    rm -rf ./hidapi
 
 ## INSTALL DEV DEPENDENCIES
-
-
 [windows]
 install: _install-submodules _install-go-tools
 
@@ -119,9 +175,9 @@ restart: start
 
 
 ## Package the plugin for distribution to Elgato
-package:
+package: build
     mkdir -p build
-    {{ DISTRIBUTION_TOOL }} -b -i {{ PLUGIN }} -o build/
+    npx streamdeck pack -o build/ {{ PLUGIN }}
 
 
 ## LOGS

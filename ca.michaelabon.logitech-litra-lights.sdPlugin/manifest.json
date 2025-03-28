@@ -1,60 +1,60 @@
 {
-  "$schema": "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
-  "Actions": [
-    {
-      "Icon": "icons/setLightsAction",
-      "Name": "Set Brightness & Temperature",
-      "States": [
-        {
-          "Image": "icons/setLightsAction",
-          "TitleAlignment": "middle",
-          "FontSize": 24
-        }
-      ],
-      "SupportedInMultiActions": true,
-      "Tooltip": "Set your lights",
-      "UUID": "ca.michaelabon.logitech-litra-lights.set"
-    },
-    {
-      "Icon": "icons/turnOffLightsAction",
-      "Name": "Turn Off Litra Lights",
-      "States": [
-        {
-          "Image": "icons/turnOffLightsAction",
-          "TitleAlignment": "middle",
-          "Title": "Off",
-          "FontSize": 24
-        }
-      ],
-      "SupportedInMultiActions": true,
-      "Tooltip": "Turn off your lights",
-      "UUID": "ca.michaelabon.logitech-litra-lights.off"
-    }
-  ],
-  "Author": "Michael Abon",
-  "Category": "Logitech Litra",
-  "CategoryIcon": "icons/categoryIcon",
-  "CodePathMac": "build/streamdeck-logitech-litra-lights",
-  "CodePath": "build/streamdeck-logitech-litra-lights.exe",
-  "Description": "Control your Logitech Litra Glow lights directly from the Stream Deck.",
-  "Icon": "icons/pluginIcon",
-  "Name": "Logitech Litra",
-  "OS": [
-    {
-      "MinimumVersion": "10.11",
-      "Platform": "mac"
-    },
-    {
-      "MinimumVersion": "10",
-      "Platform": "windows"
-    }
-  ],
-  "PropertyInspectorPath": "propertyInspector/pi.html",
-  "SDKVersion": 2,
-  "Software": {
-    "MinimumVersion": "6.4"
-  },
-  "URL": "https://github.com/michaelabon/streamdeck-logitech-litra-lights",
-  "UUID": "ca.michaelabon.logitech-litra-lights",
-  "Version": "1.0.5.0"
+	"$schema": "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
+	"Actions": [
+		{
+			"Icon": "icons/setLightsAction",
+			"Name": "Set Brightness & Temperature",
+			"States": [
+				{
+					"Image": "icons/setLightsAction",
+					"TitleAlignment": "middle",
+					"FontSize": 24
+				}
+			],
+			"SupportedInMultiActions": true,
+			"Tooltip": "Set your lights",
+			"UUID": "ca.michaelabon.logitech-litra-lights.set"
+		},
+		{
+			"Icon": "icons/turnOffLightsAction",
+			"Name": "Turn Off Litra Lights",
+			"States": [
+				{
+					"Image": "icons/turnOffLightsAction",
+					"TitleAlignment": "middle",
+					"Title": "Off",
+					"FontSize": 24
+				}
+			],
+			"SupportedInMultiActions": true,
+			"Tooltip": "Turn off your lights",
+			"UUID": "ca.michaelabon.logitech-litra-lights.off"
+		}
+	],
+	"Author": "Michael Abon",
+	"Category": "Logitech Litra",
+	"CategoryIcon": "icons/categoryIcon",
+	"CodePathMac": "build/streamdeck-logitech-litra-lights_arm64",
+	"CodePath": "build/streamdeck-logitech-litra-lights.exe",
+	"Description": "Control your Logitech Litra Glow lights directly from the Stream Deck.",
+	"Icon": "icons/pluginIcon",
+	"Name": "Logitech Litra",
+	"OS": [
+		{
+			"MinimumVersion": "10.11",
+			"Platform": "mac"
+		},
+		{
+			"MinimumVersion": "10",
+			"Platform": "windows"
+		}
+	],
+	"PropertyInspectorPath": "propertyInspector/pi.html",
+	"SDKVersion": 2,
+	"Software": {
+		"MinimumVersion": "6.4"
+	},
+	"URL": "https://github.com/michaelabon/streamdeck-logitech-litra-lights",
+	"UUID": "ca.michaelabon.logitech-litra-lights",
+	"Version": "1.0.6.0"
 }
