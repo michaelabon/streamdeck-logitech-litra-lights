@@ -143,15 +143,11 @@ test:
 
 [windows]
 lint:
-    cd go && gci write .
-    gofumpt -w ./go
-    golines -w ./go
+    cd go && golangci-lint run
 
 [macos, linux]
 lint:
-    cd go && gci write .
-    gofumpt -w ./go
-    golines -w ./go
+    cd go && golangci-lint run
     find ./go ./{{ PLUGIN }}/icons -type f -name '*.svg' -exec xmllint --pretty 2 --output '{}' '{}' \;
 
 

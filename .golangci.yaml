@@ -1,14 +1,4 @@
----
-output:
-  show-stats: true
-  sort-results: true
-issues:
-  exclude:
-    # go-hid needs to be built for the platform specifically
-    - "could not import github.com/sstallion/go-hid"
-    - "undefined: hid"
-  fix: true
-  max-same-issues: 10
+version: "2"
 linters:
   enable:
     - containedctx
@@ -22,12 +12,10 @@ linters:
     - errorlint
     - exhaustive
     - forcetypeassert
-    - gci
     - gocheckcompilerdirectives
     - gochecknoglobals
     - goconst
     - gocritic
-    - gofumpt
     - gosec
     - ireturn
     - mnd
@@ -39,3 +27,31 @@ linters:
     - predeclared
     - reassign
     - tagalign
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - path: (.+)\.go$
+        text: could not import github.com/sstallion/go-hid
+      - path: (.+)\.go$
+        text: 'undefined: hid'
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+issues:
+  fix: true
+formatters:
+  enable:
+    - gci
+    - gofumpt
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
