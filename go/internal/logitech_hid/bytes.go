@@ -64,8 +64,8 @@ func ConvertTemperature(temperature uint16) ([]byte, error) {
 	b[1] = 0xff
 	b[2] = 0x04
 	b[3] = 0x9c
-	//nolint:gomnd // we're splitting a number into two bytes here
-	b[4] = byte(temperature >> 8)
+
+	b[4] = byte(temperature >> 8) //nolint:mnd // Split temperature into two bytes
 	b[5] = byte(temperature)
 
 	return b, nil
