@@ -19,10 +19,18 @@ type Settings struct {
 }
 
 func main() {
+	exitCode := 0
+	defer func() {
+		os.Exit(exitCode)
+	}()
+
 	fileName := "streamdeck-logitech-litra-lights.log"
 	f, err := os.CreateTemp("logs", fileName)
 	if err != nil {
-		log.Fatalf("error creating temp file: %v", err)
+		log.Printf("error creating temp file: %v", err)
+		exitCode = 83
+
+		return
 	}
 	defer func(f *os.File) {
 		err := f.Close()
@@ -35,7 +43,10 @@ func main() {
 
 	ctx := context.Background()
 	if err := run(ctx); err != nil {
-		log.Fatalf("%v\n", err)
+		log.Printf("Fatal error: %v\n", err)
+		exitCode = 1
+
+		return
 	}
 }
 
@@ -98,6 +109,7 @@ func setupSetLightsAction(client *streamdeck.Client, settings map[string]*Settin
 			background, err := streamdeck.Image(generateBackground(*s))
 			if err != nil {
 				log.Println("Error while generating streamdeck image", err)
+
 				return err
 			}
 
@@ -136,6 +148,7 @@ func setupSetLightsAction(client *streamdeck.Client, settings map[string]*Settin
 			background, err := streamdeck.Image(generateBackground(*s))
 			if err != nil {
 				log.Println("Error while generating streamdeck image", err)
+
 				return err
 			}
 
@@ -156,7 +169,8 @@ func setupSetLightsAction(client *streamdeck.Client, settings map[string]*Settin
 	setLightsAction.RegisterHandler(
 		streamdeck.WillDisappear,
 		func(ctx context.Context, client *streamdeck.Client, event streamdeck.Event) error {
-			s, _ := settings[event.Context]
+			s := settings[event.Context]
+
 			return client.SetSettings(ctx, s)
 		},
 	)
@@ -173,6 +187,7 @@ func handleTurnOffLights(ctx context.Context, client *streamdeck.Client) error {
 	err := writeToLights(sendTurnOffLights())
 	if err != nil {
 		log.Println("Error: ", err)
+
 		return client.SetTitle(ctx, "Err", streamdeck.HardwareAndSoftware)
 	}
 
@@ -199,18 +214,21 @@ func handleSetLights(
 	background, err := streamdeck.Image(generateBackground(*s))
 	if err != nil {
 		log.Println("Error while generating streamdeck image", err)
+
 		return err
 	}
 
 	err = writeToLights(sendBrightnessAndTemperature(*s))
 	if err != nil {
 		log.Println("Error: ", err)
+
 		return client.SetTitle(ctx, "Err", streamdeck.HardwareAndSoftware)
 	}
 
 	err = client.SetImage(ctx, background, streamdeck.HardwareAndSoftware)
 	if err != nil {
 		log.Println("Error while setting the light background", err)
+
 		return err
 	}
 
@@ -253,6 +271,7 @@ func sendBrightnessAndTemperature(settings Settings) hid.EnumFunc {
 		d, err := hid.Open(VID, PID, deviceInfo.SerialNbr)
 		if err != nil {
 			log.Println("Unable to open", err)
+
 			return err
 		}
 		defer func(d *hid.Device) {
@@ -265,25 +284,30 @@ func sendBrightnessAndTemperature(settings Settings) hid.EnumFunc {
 		byteSequence := logitech.ConvertLightsOn()
 		if _, err := d.Write(byteSequence); err != nil {
 			log.Println(err)
+
 			return err
 		}
 
 		byteSequence, err = logitech.ConvertBrightness(settings.Brightness)
 		if err != nil {
 			log.Println(err)
+
 			return err
 		}
 		if _, err := d.Write(byteSequence); err != nil {
 			log.Println("Unable to write bytes with set brightness", err)
+
 			return err
 		}
 		byteSequence, err = logitech.ConvertTemperature(settings.Temperature)
 		if err != nil {
 			log.Println(err)
+
 			return err
 		}
 		if _, err := d.Write(byteSequence); err != nil {
 			log.Println("Unable to write bytes with set temperature", err)
+
 			return err
 		}
 
@@ -298,6 +322,7 @@ func sendTurnOffLights() hid.EnumFunc {
 		d, err := hid.Open(VID, PID, deviceInfo.SerialNbr)
 		if err != nil {
 			log.Println("unable to open", err)
+
 			return err
 		}
 		defer func(d *hid.Device) {
@@ -310,6 +335,7 @@ func sendTurnOffLights() hid.EnumFunc {
 		byteSequence := logitech.ConvertLightsOff()
 		if _, err := d.Write(byteSequence); err != nil {
 			log.Println("unable to write bytes with lights off", err)
+
 			return err
 		}
 
