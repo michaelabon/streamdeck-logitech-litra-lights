@@ -170,6 +170,9 @@ restart: start
 ## PACKAGE
 
 
+validate:
+    cd "{{ PLUGIN }}" && npx streamdeck validate
+
 ## Package the plugin for distribution to Elgato
 package: build
     mkdir -p build

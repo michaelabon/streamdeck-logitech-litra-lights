@@ -1,7 +1,4 @@
 {
-  "scripts": {
-    "validate": "streamdeck validate"
-  },
   "devDependencies": {
     "@elgato/cli": "^1.1.1"
   }
