@@ -25,7 +25,13 @@ func main() {
 	}()
 
 	fileName := "streamdeck-logitech-litra-lights.log"
-	f, err := os.CreateTemp("logs", fileName)
+
+// ensure logs directory exists next to the binary
+_ = os.MkdirAll("logs", 0755)
+
+f, err := os.CreateTemp("logs", fileName)
+
+
 	if err != nil {
 		log.Printf("error creating temp file: %v", err)
 		exitCode = 83
@@ -236,8 +242,11 @@ func handleSetLights(
 }
 
 const (
-	VID = 0x046d
-	PID = 0xc900
+	VID = 0x046d // Logitech
+
+	PID_LITRA_GLOW      = 0xc900 // Litra Glow
+	PID_LITRA_BEAM      = 0xc901 // Litra Beam
+	PID_LITRA_BEAM_ALT  = 0xC8F1 // Litra Beam (alternate firmware variant)
 )
 
 // writeToLights opens a connection to each light attached to the computer
@@ -256,19 +265,34 @@ func writeToLights(theFunc hid.EnumFunc) error {
 		}
 	}()
 
-	err = hid.Enumerate(VID, PID, theFunc)
-	if err != nil {
-		return err
+// Enumerate only known Litra PIDs to avoid privilege violations on other Logitech devices (mice, keyboards)
+for _, pid := range []uint16{PID_LITRA_GLOW, PID_LITRA_BEAM, PID_LITRA_BEAM_ALT} {
+	if err := hid.Enumerate(VID, pid, theFunc); err != nil {
+		log.Println("enumerate failed", err)
 	}
+}
 
 	return nil
 }
 
 func sendBrightnessAndTemperature(settings Settings) hid.EnumFunc {
 	return func(deviceInfo *hid.DeviceInfo) error {
+log.Printf(
+	"Found HID device: VID=0x%04x PID=0x%04x Interface=%d Serial=%s\n",
+	deviceInfo.VendorID,
+	deviceInfo.ProductID,
+	deviceInfo.InterfaceNbr,
+	deviceInfo.SerialNbr,
+)
 		var err error
 
-		d, err := hid.Open(VID, PID, deviceInfo.SerialNbr)
+
+d, err := hid.Open(
+	deviceInfo.VendorID,
+	deviceInfo.ProductID,
+	deviceInfo.SerialNbr,
+)
+
 		if err != nil {
 			log.Println("Unable to open", err)
 
@@ -319,8 +343,13 @@ func sendTurnOffLights() hid.EnumFunc {
 	return func(deviceInfo *hid.DeviceInfo) error {
 		var err error
 
-		d, err := hid.Open(VID, PID, deviceInfo.SerialNbr)
-		if err != nil {
+d, err := hid.Open(
+	deviceInfo.VendorID,
+	deviceInfo.ProductID,
+	deviceInfo.SerialNbr,
+)		
+
+if err != nil {
 			log.Println("unable to open", err)
 
 			return err
