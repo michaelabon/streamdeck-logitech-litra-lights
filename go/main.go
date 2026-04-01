@@ -244,8 +244,9 @@ func handleSetLights(
 const (
 	VID = 0x046d // Logitech
 
-	PID_LITRA_GLOW = 0xc900 // bestehendes Modell
-	PID_LITRA_BEAM = 0xC8F1 // Litra Beam (51457 dezimal)
+	PID_LITRA_GLOW      = 0xc900 // Litra Glow
+	PID_LITRA_BEAM      = 0xc901 // Litra Beam
+	PID_LITRA_BEAM_ALT  = 0xC8F1 // Litra Beam (alternate firmware variant)
 )
 
 // writeToLights opens a connection to each light attached to the computer
@@ -264,9 +265,11 @@ func writeToLights(theFunc hid.EnumFunc) error {
 		}
 	}()
 
-// Enumerate ALL Logitech HID devices (PID = 0 means "any")
-if err := hid.Enumerate(VID, 0, theFunc); err != nil {
-	log.Println("enumerate failed", err)
+// Enumerate only known Litra PIDs to avoid privilege violations on other Logitech devices (mice, keyboards)
+for _, pid := range []uint16{PID_LITRA_GLOW, PID_LITRA_BEAM, PID_LITRA_BEAM_ALT} {
+	if err := hid.Enumerate(VID, pid, theFunc); err != nil {
+		log.Println("enumerate failed", err)
+	}
 }
 
 	return nil
