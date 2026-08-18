@@ -28,6 +28,10 @@ I have split the codebase into its two parts:
 1. the actual Go code in `go/`
 2. plugin-specific files are in `ca.michaelabon.logitechlitra.sdPlugin/`
 
+For the USB HID side of things
+(how the lights are discovered and what bytes get sent to them),
+see [DEVELOPERS.md](DEVELOPERS.md).
+
 Debugging is largely logfile based.
 The plugin will write to the `ca.michaelabon.logitechlitra.sdPlugin/logs/` directory.
 
