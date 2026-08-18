@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"strconv"
 
@@ -27,23 +27,32 @@ func main() {
 	fileName := "streamdeck-logitech-litra-lights.log"
 	f, err := os.CreateTemp("logs", fileName)
 	if err != nil {
-		log.Printf("error creating temp file: %v", err)
+		// The logger isn't set up yet, so stderr is the only channel left.
+		fmt.Fprintf(os.Stderr, "unable to create log file %q: %v\n", fileName, err)
 		exitCode = 83
 
 		return
 	}
 	defer func(f *os.File) {
-		err := f.Close()
-		if err != nil {
-			log.Printf("unable to close file “%s”: %v\n", fileName, err)
-		}
+		_ = f.Close()
 	}(f)
 
-	log.SetOutput(f)
+	logLevel := slog.LevelInfo
+	if os.Getenv("LITRA_DEBUG") != "" {
+		logLevel = slog.LevelDebug
+	}
+
+	logger := slog.New(slog.NewTextHandler(f, &slog.HandlerOptions{
+		Level: logLevel,
+	}))
+	slog.SetDefault(logger)
+
+	slog.Info("starting plugin",
+		"debug_enabled", logLevel == slog.LevelDebug)
 
 	ctx := context.Background()
 	if err := run(ctx); err != nil {
-		log.Printf("Fatal error: %v\n", err)
+		slog.Error("fatal error", "error", err)
 		exitCode = 1
 
 		return
@@ -108,7 +117,7 @@ func setupSetLightsAction(client *streamdeck.Client, settings map[string]*Settin
 
 			background, err := streamdeck.Image(generateBackground(*s))
 			if err != nil {
-				log.Println("Error while generating streamdeck image", err)
+				slog.Error("failed to generate streamdeck image", "error", err)
 
 				return err
 			}
@@ -147,7 +156,7 @@ func setupSetLightsAction(client *streamdeck.Client, settings map[string]*Settin
 
 			background, err := streamdeck.Image(generateBackground(*s))
 			if err != nil {
-				log.Println("Error while generating streamdeck image", err)
+				slog.Error("failed to generate streamdeck image", "error", err)
 
 				return err
 			}
@@ -184,12 +193,16 @@ func setupSetLightsAction(client *streamdeck.Client, settings map[string]*Settin
 }
 
 func handleTurnOffLights(ctx context.Context, client *streamdeck.Client) error {
+	slog.Debug("handleTurnOffLights called")
+
 	err := writeToLights(sendTurnOffLights())
 	if err != nil {
-		log.Println("Error: ", err)
+		slog.Error("failed to turn off lights", "error", err)
 
 		return client.SetTitle(ctx, "Err", streamdeck.HardwareAndSoftware)
 	}
+
+	slog.Debug("handleTurnOffLights completed successfully")
 
 	return nil
 }
@@ -205,7 +218,9 @@ func handleSetLights(
 		return fmt.Errorf("couldn't find settings for context %v", event.Context)
 	}
 
-	log.Printf("KeyDown with payload %+v\n", event.Payload)
+	slog.Debug("handleSetLights called",
+		"temperature", s.Temperature,
+		"brightness", s.Brightness)
 
 	if err := client.SetSettings(ctx, s); err != nil {
 		return err
@@ -213,103 +228,145 @@ func handleSetLights(
 
 	background, err := streamdeck.Image(generateBackground(*s))
 	if err != nil {
-		log.Println("Error while generating streamdeck image", err)
+		slog.Error("failed to generate streamdeck image", "error", err)
 
 		return err
 	}
 
 	err = writeToLights(sendBrightnessAndTemperature(*s))
 	if err != nil {
-		log.Println("Error: ", err)
+		slog.Error("failed to set lights", "error", err)
 
 		return client.SetTitle(ctx, "Err", streamdeck.HardwareAndSoftware)
 	}
 
 	err = client.SetImage(ctx, background, streamdeck.HardwareAndSoftware)
 	if err != nil {
-		log.Println("Error while setting the light background", err)
+		slog.Error("failed to set streamdeck image", "error", err)
 
 		return err
 	}
+
+	slog.Debug("handleSetLights completed successfully")
 
 	return client.SetTitle(ctx, strconv.Itoa(int(s.Temperature)), streamdeck.HardwareAndSoftware)
 }
 
 const (
+	// VID is the USB Vendor ID for Logitech.
 	VID = 0x046d
+
+	// PID is the USB Product ID for the Litra Glow.
+	// Other Litra products:
+	// Beam = 0xc901, Beam LX = 0xc903.
 	PID = 0xc900
+
+	// Litra exposes multiple HID interfaces.
+	// This one accepts brightness/temperature commands.
+	// See DEVELOPERS.md for details.
+	UsagePage = 0xff43
 )
 
 // writeToLights opens a connection to each light attached to the computer
 // and then invokes theFunc for each light.
 func writeToLights(theFunc hid.EnumFunc) error {
-	var err error
+	slog.Debug("writeToLights: starting",
+		"vid", fmt.Sprintf("0x%04x", VID),
+		"pid", fmt.Sprintf("0x%04x", PID))
 
-	if err = hid.Init(); err != nil {
-		log.Println("Unable to hid.Init()", err)
-		log.Println(err)
+	if err := hid.Init(); err != nil {
+		slog.Error("writeToLights: hid.Init() failed", "error", err)
+
+		return err
 	}
 	defer func() {
-		err := hid.Exit()
-		if err != nil {
-			log.Println("unable to hid.Exit()", err)
+		if err := hid.Exit(); err != nil {
+			slog.Error("writeToLights: hid.Exit() failed", "error", err)
 		}
 	}()
 
-	err = hid.Enumerate(VID, PID, theFunc)
+	err := hid.Enumerate(VID, PID, theFunc)
 	if err != nil {
+		slog.Error("writeToLights: hid.Enumerate() failed", "error", err)
+
 		return err
 	}
+
+	slog.Debug("writeToLights: completed successfully")
 
 	return nil
 }
 
 func sendBrightnessAndTemperature(settings Settings) hid.EnumFunc {
 	return func(deviceInfo *hid.DeviceInfo) error {
-		var err error
+		if deviceInfo.UsagePage != UsagePage {
+			slog.Debug("skipping non-control interface",
+				"serial", deviceInfo.SerialNbr,
+				"usagePage", fmt.Sprintf("0x%04x", deviceInfo.UsagePage),
+				"expected", fmt.Sprintf("0x%04x", UsagePage))
 
-		d, err := hid.Open(VID, PID, deviceInfo.SerialNbr)
+			return nil
+		}
+
+		slog.Debug("found Litra control interface",
+			"serial", deviceInfo.SerialNbr,
+			"path", deviceInfo.Path,
+			"usagePage", fmt.Sprintf("0x%04x", deviceInfo.UsagePage))
+
+		d, err := hid.OpenPath(deviceInfo.Path)
 		if err != nil {
-			log.Println("Unable to open", err)
+			slog.Error("failed to open device",
+				"serial", deviceInfo.SerialNbr,
+				"error", err)
 
 			return err
 		}
 		defer func(d *hid.Device) {
-			err := d.Close()
-			if err != nil {
-				log.Println("unable to hid.Device.Close()", err)
+			if err := d.Close(); err != nil {
+				slog.Error("failed to close device", "error", err)
 			}
 		}(d)
 
+		slog.Debug("sending lights on command", "serial", deviceInfo.SerialNbr)
 		byteSequence := logitech.ConvertLightsOn()
 		if _, err := d.Write(byteSequence); err != nil {
-			log.Println(err)
+			slog.Error("failed to send lights on command", "error", err)
 
 			return err
 		}
 
+		slog.Debug("sending brightness command",
+			"serial", deviceInfo.SerialNbr,
+			"brightness", settings.Brightness)
 		byteSequence, err = logitech.ConvertBrightness(settings.Brightness)
 		if err != nil {
-			log.Println(err)
+			slog.Error("failed to convert brightness", "error", err)
 
 			return err
 		}
 		if _, err := d.Write(byteSequence); err != nil {
-			log.Println("Unable to write bytes with set brightness", err)
+			slog.Error("failed to send brightness command", "error", err)
 
 			return err
 		}
+
+		slog.Debug("sending temperature command",
+			"serial", deviceInfo.SerialNbr,
+			"temperature", settings.Temperature)
 		byteSequence, err = logitech.ConvertTemperature(settings.Temperature)
 		if err != nil {
-			log.Println(err)
+			slog.Error("failed to convert temperature", "error", err)
 
 			return err
 		}
 		if _, err := d.Write(byteSequence); err != nil {
-			log.Println("Unable to write bytes with set temperature", err)
+			slog.Error("failed to send temperature command", "error", err)
 
 			return err
 		}
+
+		slog.Debug("successfully set brightness and temperature",
+			"serial", deviceInfo.SerialNbr)
 
 		return nil
 	}
@@ -317,27 +374,43 @@ func sendBrightnessAndTemperature(settings Settings) hid.EnumFunc {
 
 func sendTurnOffLights() hid.EnumFunc {
 	return func(deviceInfo *hid.DeviceInfo) error {
-		var err error
+		if deviceInfo.UsagePage != UsagePage {
+			slog.Debug("skipping non-control interface",
+				"serial", deviceInfo.SerialNbr,
+				"usagePage", fmt.Sprintf("0x%04x", deviceInfo.UsagePage),
+				"expected", fmt.Sprintf("0x%04x", UsagePage))
 
-		d, err := hid.Open(VID, PID, deviceInfo.SerialNbr)
+			return nil
+		}
+
+		slog.Debug("found Litra control interface",
+			"serial", deviceInfo.SerialNbr,
+			"path", deviceInfo.Path,
+			"usagePage", fmt.Sprintf("0x%04x", deviceInfo.UsagePage))
+
+		d, err := hid.OpenPath(deviceInfo.Path)
 		if err != nil {
-			log.Println("unable to open", err)
+			slog.Error("failed to open device",
+				"serial", deviceInfo.SerialNbr,
+				"error", err)
 
 			return err
 		}
 		defer func(d *hid.Device) {
-			err := d.Close()
-			if err != nil {
-				log.Println("unable to hid.Device.Close()", err)
+			if err := d.Close(); err != nil {
+				slog.Error("failed to close device", "error", err)
 			}
 		}(d)
 
+		slog.Debug("sending lights off command", "serial", deviceInfo.SerialNbr)
 		byteSequence := logitech.ConvertLightsOff()
 		if _, err := d.Write(byteSequence); err != nil {
-			log.Println("unable to write bytes with lights off", err)
+			slog.Error("failed to send lights off command", "error", err)
 
 			return err
 		}
+
+		slog.Debug("successfully turned off lights", "serial", deviceInfo.SerialNbr)
 
 		return nil
 	}
