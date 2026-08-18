@@ -236,18 +236,27 @@ func handleSetLights(
 }
 
 const (
+	// VID is the USB Vendor ID for Logitech.
 	VID = 0x046d
+
+	// PID is the USB Product ID for the Litra Glow.
+	// Other Litra products:
+	// Beam = 0xc901, Beam LX = 0xc903.
 	PID = 0xc900
+
+	// Litra exposes multiple HID interfaces.
+	// This one accepts brightness/temperature commands.
+	// See DEVELOPERS.md for details.
+	UsagePage = 0xff43
 )
 
 // writeToLights opens a connection to each light attached to the computer
 // and then invokes theFunc for each light.
 func writeToLights(theFunc hid.EnumFunc) error {
-	var err error
-
-	if err = hid.Init(); err != nil {
+	if err := hid.Init(); err != nil {
 		log.Println("Unable to hid.Init()", err)
-		log.Println(err)
+
+		return err
 	}
 	defer func() {
 		err := hid.Exit()
@@ -256,7 +265,7 @@ func writeToLights(theFunc hid.EnumFunc) error {
 		}
 	}()
 
-	err = hid.Enumerate(VID, PID, theFunc)
+	err := hid.Enumerate(VID, PID, theFunc)
 	if err != nil {
 		return err
 	}
@@ -266,9 +275,11 @@ func writeToLights(theFunc hid.EnumFunc) error {
 
 func sendBrightnessAndTemperature(settings Settings) hid.EnumFunc {
 	return func(deviceInfo *hid.DeviceInfo) error {
-		var err error
+		if deviceInfo.UsagePage != UsagePage {
+			return nil
+		}
 
-		d, err := hid.Open(VID, PID, deviceInfo.SerialNbr)
+		d, err := hid.OpenPath(deviceInfo.Path)
 		if err != nil {
 			log.Println("Unable to open", err)
 
@@ -317,9 +328,11 @@ func sendBrightnessAndTemperature(settings Settings) hid.EnumFunc {
 
 func sendTurnOffLights() hid.EnumFunc {
 	return func(deviceInfo *hid.DeviceInfo) error {
-		var err error
+		if deviceInfo.UsagePage != UsagePage {
+			return nil
+		}
 
-		d, err := hid.Open(VID, PID, deviceInfo.SerialNbr)
+		d, err := hid.OpenPath(deviceInfo.Path)
 		if err != nil {
 			log.Println("unable to open", err)
 
