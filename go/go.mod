@@ -1,6 +1,6 @@
 module github.com/michaelabon/streamdeck-logitech-litra
 
-go 1.24.6
+go 1.25.0
 
 require (
 	github.com/maruel/temperature v1.0.0
@@ -10,5 +10,5 @@ require (
 
 require (
 	github.com/gorilla/websocket v1.5.3 // indirect
-	golang.org/x/sys v0.37.0 // indirect
+	golang.org/x/sys v0.47.0 // indirect
 )
